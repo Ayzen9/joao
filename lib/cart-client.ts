@@ -8,7 +8,7 @@ export interface CartItem {
   color: string
   concurso: string
   quantity: number
-  numbers?: number[]
+  numbers?: number[] | { hidden: true; quantity: number }
   bonus?: number[]
   team?: string
 }
@@ -43,7 +43,6 @@ export function getCartFromStorage(): Cart {
       }
     }
   } catch {
-    // Se houver erro ao parsear, limpa o cookie corrompido
     clearCart()
   }
 
@@ -57,9 +56,7 @@ export function saveCartToStorage(cart: Cart): void {
     const encoded = btoa(JSON.stringify(cart))
     const maxAge = 60 * 60 * 24 * 7
     document.cookie = `${CART_STORAGE_KEY}=${encodeURIComponent(encoded)}; path=/; max-age=${maxAge}; SameSite=Lax`
-  } catch {
-    // Erro ao salvar - ignora silenciosamente
-  }
+  } catch {}
 }
 
 function getLatestCart(): Cart {
@@ -72,6 +69,7 @@ export function addToCart(
   price: number,
   color: string,
   concurso: string,
+  hiddenNumbers?: { hidden: true; quantity: number }
 ): Cart {
   const cart = getLatestCart()
 
@@ -83,6 +81,7 @@ export function addToCart(
     color,
     concurso,
     quantity: 1,
+    numbers: hiddenNumbers,
   })
 
   cart.total = cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0)

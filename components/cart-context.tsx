@@ -12,6 +12,19 @@ import {
 } from "@/lib/cart-client"
 import type { ComboData } from "@/lib/combos-data"
 
+export interface CartItem {
+  id: string
+  lottery: string
+  type: "bolao" | "aposta"
+  price: number
+  color: string
+  concurso: string
+  quantity: number
+  numbers?: number[] | { hidden: true; quantity: number }
+  bonus?: number[]
+  team?: string
+}
+
 export interface ComboCartItem {
   id: string
   type: "combo"
@@ -29,14 +42,21 @@ export interface ComboCartItem {
 }
 
 interface CartContextType {
-  cart: Cart
+  cart: { items: CartItem[] }
   comboItems: ComboCartItem[]
   isOpen: boolean
 
   openCart: () => void
   closeCart: () => void
 
-  addItem: (name: string, type: "bolao" | "aposta", price: number, color: string, concurso: string) => void
+  addItem: (
+    name: string,
+    type: "bolao" | "aposta",
+    price: number,
+    color: string,
+    concurso: string,
+    hiddenNumbers?: { hidden: true; quantity: number }
+  ) => void
 
   addItemWithNumbers: (
     name: string,
@@ -75,7 +95,6 @@ function getCombosFromStorage(): ComboCartItem[] {
 
   try {
     const cookie = document.cookie.split("; ").find((row) => row.startsWith(`${COMBO_STORAGE_KEY}=`))
-
     if (!cookie) return []
 
     const value = cookie.split("=")[1]
@@ -85,7 +104,6 @@ function getCombosFromStorage(): ComboCartItem[] {
       return parsed
     }
   } catch {
-    // Se houver erro, limpa o cookie corrompido
     saveCombosToStorage([])
   }
 
@@ -97,16 +115,14 @@ function saveCombosToStorage(combos: ComboCartItem[]): void {
 
   try {
     const encoded = btoa(JSON.stringify(combos))
-    const maxAge = 60 * 60 * 24 * 7 // 7 dias
+    const maxAge = 60 * 60 * 24 * 7
 
     document.cookie = `${COMBO_STORAGE_KEY}=${encodeURIComponent(encoded)}; path=/; max-age=${maxAge}; SameSite=Lax`
-  } catch {
-    // Erro ao salvar - ignora silenciosamente
-  }
+  } catch {}
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [cart, setCart] = useState<Cart>({ items: [], total: 0 })
+  const [cart, setCart] = useState<{ items: CartItem[] }>({ items: [] })
   const [comboItems, setComboItems] = useState<ComboCartItem[]>([])
   const [isOpen, setIsOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -118,28 +134,29 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setComboItems(latestCombos)
   }, [])
 
-  // Inicialização
   useEffect(() => {
     setMounted(true)
     refreshCart()
   }, [refreshCart])
 
   useEffect(() => {
-    const handleFocus = () => {
-      refreshCart()
-    }
-
+    const handleFocus = () => refreshCart()
     window.addEventListener("focus", handleFocus)
     return () => window.removeEventListener("focus", handleFocus)
   }, [refreshCart])
 
-  // Funções de controle do drawer/carrinho
   const openCart = () => setIsOpen(true)
   const closeCart = () => setIsOpen(false)
 
-  // Operações com itens normais
-  const addItem = (name: string, type: "bolao" | "aposta", price: number, color: string, concurso: string) => {
-    const updated = addToCartStorage(name, type, price, color, concurso)
+  const addItem = (
+    name: string,
+    type: "bolao" | "aposta",
+    price: number,
+    color: string,
+    concurso: string,
+    hiddenNumbers?: { hidden: true; quantity: number }
+  ) => {
+    const updated = addToCartStorage(name, type, price, color, concurso, hiddenNumbers)
     setCart(updated)
     setIsOpen(true)
   }
@@ -167,7 +184,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setCart(updateQuantityStorage(itemId, quantity))
   }
 
-  // Operações com combos
   const addComboToCart = (combo: ComboData, showNumbers: boolean) => {
     const currentCombos = getCombosFromStorage()
 
@@ -207,7 +223,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
     saveCombosToStorage(updated)
   }
 
-  // Utilitários
   const clearAllItems = () => {
     setCart(clearCartStorage())
     setComboItems([])

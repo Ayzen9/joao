@@ -27,7 +27,7 @@ interface CartItem {
   price: number
   color: string
   concurso: string
-  numbers?: number[]
+  numbers?: number[] | { hidden: true; quantity: number }
   bonus?: number[]
   team?: string
   quantity: number
@@ -84,11 +84,21 @@ function CarrinhoContent() {
     })
 
     cartItems.forEach((item) => {
+      let numbersDisplay: string | undefined
+
+      if (item.numbers) {
+        if (Array.isArray(item.numbers)) {
+          numbersDisplay = item.numbers.join(",")
+        } else if ("hidden" in item.numbers && item.numbers.hidden) {
+          numbersDisplay = "Números ocultos (revelados após pagamento)"
+        }
+      }
+
       items.push({
         title: `${item.lottery} - ${item.type === "bolao" ? "Bolão" : "Aposta Simples"}`,
         quantity: item.quantity,
         price: item.price,
-        numbers: item.numbers ? item.numbers.join(",") : undefined,
+        numbers: numbersDisplay,
       })
     })
 
@@ -212,7 +222,6 @@ function CarrinhoContent() {
                         />
                       ))}
                     </div>
-                    {/* Desktop table */}
                     <div className="hidden md:block bg-white overflow-hidden border border-[#ddd]">
                       <div className="overflow-x-auto">
                         <table className="w-full min-w-[800px] border-collapse">
@@ -520,7 +529,6 @@ function CartTable({
           />
         ))}
       </div>
-      {/* Desktop table */}
       <div className="hidden md:block bg-white overflow-hidden border border-[#ddd]">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[800px] border-collapse">
@@ -561,9 +569,19 @@ function CartTable({
             <tbody>
               {items.map((item) => {
                 const isExpanded = expandedNumbers[item.id] || false
-                const hasMoreNumbers = item.numbers && item.numbers.length > MAX_VISIBLE_NUMBERS
-                const visibleNumbers = isExpanded ? item.numbers : item.numbers?.slice(0, MAX_VISIBLE_NUMBERS)
-                const remainingCount = item.numbers ? item.numbers.length - MAX_VISIBLE_NUMBERS : 0
+                const hasNumbers = item.numbers && (
+                  (Array.isArray(item.numbers) && item.numbers.length > 0) ||
+                  ("hidden" in item.numbers && item.numbers.hidden)
+                )
+                const isHidden = item.numbers && "hidden" in item.numbers && item.numbers.hidden
+                const visibleNumbers = isExpanded && Array.isArray(item.numbers)
+                  ? item.numbers
+                  : Array.isArray(item.numbers)
+                    ? item.numbers.slice(0, MAX_VISIBLE_NUMBERS)
+                    : []
+                const remainingCount = Array.isArray(item.numbers) ? item.numbers.length - MAX_VISIBLE_NUMBERS : 0
+                const hasMoreNumbers = Array.isArray(item.numbers) && item.numbers.length > MAX_VISIBLE_NUMBERS
+
                 return (
                   <tr key={item.id} className="border-b border-[#ddd] last:border-b-0">
                     <td className="py-4 px-8 border border-[#ddd]">
@@ -586,36 +604,44 @@ function CartTable({
                       </div>
                     </td>
                     <td className="py-4 px-8 text-center border border-[#ddd]">
-                      {item.numbers && item.numbers.length > 0 ? (
+                      {hasNumbers ? (
                         <div className="flex flex-col items-center">
-                          <div className="flex flex-wrap gap-1 justify-center">
-                            {visibleNumbers?.map((num, idx) => (
-                              <span
-                                key={idx}
-                                className="inline-flex items-center justify-center w-8 h-8 rounded-full text-white text-[12px] font-bold"
-                                style={{ backgroundColor: item.color }}
-                              >
-                                {num}
-                              </span>
-                            ))}
-                          </div>
-                          {hasMoreNumbers && !isExpanded && (
-                            <button
-                              onClick={() => onToggleNumbers(item.id)}
-                              className="mt-2 text-[12px] text-[#0066b3] hover:underline flex items-center gap-1"
-                            >
-                              +{remainingCount} mais
-                              <ChevronUp className="w-3 h-3 rotate-180" />
-                            </button>
-                          )}
-                          {isExpanded && hasMoreNumbers && (
-                            <button
-                              onClick={() => onToggleNumbers(item.id)}
-                              className="mt-2 text-[12px] text-[#0066b3] hover:underline flex items-center gap-1"
-                            >
-                              Ver menos
-                              <ChevronUp className="w-3 h-3" />
-                            </button>
+                          {isHidden ? (
+                            <span className="text-[14px] text-gray-600 italic">
+                              Números ocultos (revelados após pagamento)
+                            </span>
+                          ) : (
+                            <>
+                              <div className="flex flex-wrap gap-1 justify-center">
+                                {visibleNumbers.map((num, idx) => (
+                                  <span
+                                    key={idx}
+                                    className="inline-flex items-center justify-center w-8 h-8 rounded-full text-white text-[12px] font-bold"
+                                    style={{ backgroundColor: item.color }}
+                                  >
+                                    {num}
+                                  </span>
+                                ))}
+                              </div>
+                              {hasMoreNumbers && !isExpanded && (
+                                <button
+                                  onClick={() => onToggleNumbers(item.id)}
+                                  className="mt-2 text-[12px] text-[#0066b3] hover:underline flex items-center gap-1"
+                                >
+                                  +{remainingCount} mais
+                                  <ChevronUp className="w-3 h-3 rotate-180" />
+                                </button>
+                              )}
+                              {isExpanded && hasMoreNumbers && (
+                                <button
+                                  onClick={() => onToggleNumbers(item.id)}
+                                  className="mt-2 text-[12px] text-[#0066b3] hover:underline flex items-center gap-1"
+                                >
+                                  Ver menos
+                                  <ChevronUp className="w-3 h-3" />
+                                </button>
+                              )}
+                            </>
                           )}
                         </div>
                       ) : (
@@ -676,6 +702,12 @@ function MobileCartItemCard({
   isExpanded: boolean
   onToggleExpand: () => void
 }) {
+  const hasNumbers = item.numbers && (
+    (Array.isArray(item.numbers) && item.numbers.length > 0) ||
+    ("hidden" in item.numbers && item.numbers.hidden)
+  )
+  const isHidden = item.numbers && "hidden" in item.numbers && item.numbers.hidden
+
   return (
     <div className="bg-white border border-[#ddd] rounded-lg overflow-hidden">
       <div className="p-4 flex items-center justify-between">
@@ -694,22 +726,30 @@ function MobileCartItemCard({
           </p>
         </div>
       </div>
-      {item.numbers && item.numbers.length > 0 && (
+      {hasNumbers && (
         <div className="px-4 pb-3">
           <button onClick={onToggleExpand} className="text-[12px] text-[#0066b3] hover:underline">
             {isExpanded ? "Ocultar números" : "Ver números"}
           </button>
           {isExpanded && (
-            <div className="mt-2 flex flex-wrap gap-1">
-              {item.numbers.map((num, idx) => (
-                <span
-                  key={idx}
-                  className="inline-flex items-center justify-center w-7 h-7 rounded-full text-white text-[11px] font-bold"
-                  style={{ backgroundColor: item.color }}
-                >
-                  {num}
+            <div className="mt-2">
+              {isHidden ? (
+                <span className="text-[12px] text-gray-600 italic">
+                  Números ocultos (revelados após pagamento)
                 </span>
-              ))}
+              ) : (
+                <div className="flex flex-wrap gap-1">
+                  {Array.isArray(item.numbers) && item.numbers.map((num, idx) => (
+                    <span
+                      key={idx}
+                      className="inline-flex items-center justify-center w-7 h-7 rounded-full text-white text-[11px] font-bold"
+                      style={{ backgroundColor: item.color }}
+                    >
+                      {num}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

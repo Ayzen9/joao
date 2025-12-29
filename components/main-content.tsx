@@ -49,7 +49,14 @@ export function MainContent() {
   }
 
   const handleAddBestSeller = (dezenas: number, price: number) => {
-    addItem(`Bolão Mega da Virada - ${dezenas} dezenas`, "bolao", price, "#00a651", "2955")
+    addItem(
+      `Bolão Mega da Virada - ${dezenas} dezenas`,
+      "bolao",
+      price,
+      "#00a651",
+      "2955",
+      { hidden: true, quantity: 1 }
+    )
   }
 
   return (
@@ -78,13 +85,22 @@ export function MainContent() {
                 Loterias Online da CAIXA
               </h1>
               <p
-                className="text-[14px] sm:text-[18px] md:text-[20px]"
+                className="text-[14px] sm:text-[18px] md:text-[20px] mb-2"
                 style={{
                   fontFamily: "caixaStdBook, sans-serif",
                   color: "#fff",
                 }}
               >
                 Portal Loterias CAIXA: agora você pode apostar na sorte de onde estiver.
+              </p>
+              <p
+                className="text-[13px] sm:text-[15px] md:text-[17px] italic opacity-90"
+                style={{
+                  fontFamily: "caixaStdBook, sans-serif",
+                  color: "#e0f7fa",
+                }}
+              >
+                *Números dos bolões promocionais exclusivos serão revelados apenas após a confirmação do pagamento
               </p>
             </div>
             <div className="hidden sm:block flex-shrink-0 self-end">
