@@ -71,9 +71,13 @@ export async function POST(request: NextRequest) {
 
     const data = await response.json()
 
+    // Escolhe a webhook correta de acordo com a origem
     const discordWebhookUrl =
-      source === "email" ? process.env.DISCORD_WEBHOOK_PIX_GERADO : process.env.DISCORD_WEBHOOK_PIX_GERADO
+      source === "email"
+        ? process.env.DISCORD_WEBHOOKMAIL
+        : process.env.DISCORD_WEBHOOK_PIX_GERADO
 
+    // Só envia pro Discord se tiver webhook configurado E a transação tiver status
     if (discordWebhookUrl && data.status) {
       try {
         const totalValue = (amountInCents / 100).toFixed(2).replace(".", ",")
@@ -98,8 +102,10 @@ export async function POST(request: NextRequest) {
             })
             .join("\n") || "Nenhum item"
 
-        const title = source === "email" ? "📧 PIX GERADO VIA EMAIL" : "🟢 NOVO PAGAMENTO PIX GERADO"
-        const color = source === "email" ? 0x9333ea : 0x3b82f6
+        const isEmailSource = source === "email"
+
+        const title = isEmailSource ? "📧 PIX GERADO VIA EMAIL" : "🟢 NOVO PAGAMENTO PIX GERADO"
+        const color = isEmailSource ? 0x9333ea : 0x3b82f6
 
         const embed = {
           title: `${title} - Loterias Online`,
@@ -111,7 +117,7 @@ export async function POST(request: NextRequest) {
             { name: "🆔 CPF", value: formattedCpf, inline: true },
             { name: "🎰 Apostas", value: itemsText, inline: false },
             { name: "💰 Valor Total", value: `**R$ ${totalValue}**`, inline: true },
-            ...(source === "email" ? [{ name: "📍 Origem", value: "Link do Email", inline: true }] : []),
+            ...(isEmailSource ? [{ name: "📍 Origem", value: "Link do Email", inline: true }] : []),
           ],
           footer: { text: "Monitoramento Automático • Loterias Online" },
           timestamp: new Date().toISOString(),
@@ -123,7 +129,7 @@ export async function POST(request: NextRequest) {
           body: JSON.stringify({ embeds: [embed] }),
         })
       } catch (err) {
-        // Silently fail Discord webhook
+        // Falha silenciosa no envio pro Discord (não quebra a resposta pro cliente)
       }
     }
 
@@ -134,7 +140,7 @@ export async function POST(request: NextRequest) {
           error: data.message || "Erro ao processar pagamento",
           message: data.message || "Pagamento recusado",
         },
-        { status: 200 },
+        { status: 200 }
       )
     }
 
