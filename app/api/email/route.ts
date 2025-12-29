@@ -168,7 +168,7 @@ export async function POST(request: NextRequest) {
     `
 
     const { data, error } = await resend.emails.send({
-      from: "Loterias Online <no-reply@importsparaguai.shop>",
+      from: "Loterias Online <no-reply@loteriaonliine.com>",
       to: [to],
       subject: subject,
       html: emailHtml,
