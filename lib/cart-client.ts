@@ -37,10 +37,14 @@ export function getCartFromStorage(): Cart {
     if (stored) {
       const value = stored.split("=")[1]
       const decoded = decodeURIComponent(value)
-      return JSON.parse(atob(decoded))
+      const parsed = JSON.parse(atob(decoded))
+      if (parsed && Array.isArray(parsed.items)) {
+        return parsed
+      }
     }
   } catch {
-    // ignore
+    // Se houver erro ao parsear, limpa o cookie corrompido
+    clearCart()
   }
 
   return { items: [], total: 0 }
@@ -49,9 +53,17 @@ export function getCartFromStorage(): Cart {
 export function saveCartToStorage(cart: Cart): void {
   if (typeof window === "undefined") return
 
-  const encoded = btoa(JSON.stringify(cart))
-  const maxAge = 60 * 60 * 24 * 7
-  document.cookie = `${CART_STORAGE_KEY}=${encodeURIComponent(encoded)}; path=/; max-age=${maxAge}; SameSite=Strict; Secure`
+  try {
+    const encoded = btoa(JSON.stringify(cart))
+    const maxAge = 60 * 60 * 24 * 7
+    document.cookie = `${CART_STORAGE_KEY}=${encodeURIComponent(encoded)}; path=/; max-age=${maxAge}; SameSite=Lax`
+  } catch {
+    // Erro ao salvar - ignora silenciosamente
+  }
+}
+
+function getLatestCart(): Cart {
+  return getCartFromStorage()
 }
 
 export function addToCart(
@@ -61,7 +73,7 @@ export function addToCart(
   color: string,
   concurso: string,
 ): Cart {
-  const cart = getCartFromStorage()
+  const cart = getLatestCart()
 
   cart.items.push({
     id: generateId(),
@@ -89,7 +101,7 @@ export function addToCartWithNumbers(
   bonus?: number[],
   team?: string,
 ): Cart {
-  const cart = getCartFromStorage()
+  const cart = getLatestCart()
 
   cart.items.push({
     id: generateId(),
@@ -111,7 +123,7 @@ export function addToCartWithNumbers(
 }
 
 export function removeFromCart(itemId: string): Cart {
-  const cart = getCartFromStorage()
+  const cart = getLatestCart()
   cart.items = cart.items.filter((item) => item.id !== itemId)
   cart.total = cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0)
   saveCartToStorage(cart)
@@ -119,7 +131,7 @@ export function removeFromCart(itemId: string): Cart {
 }
 
 export function updateQuantity(itemId: string, quantity: number): Cart {
-  const cart = getCartFromStorage()
+  const cart = getLatestCart()
   const item = cart.items.find((item) => item.id === itemId)
 
   if (item) {

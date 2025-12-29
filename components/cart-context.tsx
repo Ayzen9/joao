@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react"
 import {
   type Cart,
   getCartFromStorage,
@@ -57,6 +57,7 @@ interface CartContextType {
   toggleComboNumbers: (comboId: string) => void
 
   getTotal: () => number
+  refreshCart: () => void
 }
 
 const CartContext = createContext<CartContextType | null>(null)
@@ -79,19 +80,29 @@ function getCombosFromStorage(): ComboCartItem[] {
 
     const value = cookie.split("=")[1]
     const decoded = decodeURIComponent(value)
-    return JSON.parse(atob(decoded))
+    const parsed = JSON.parse(atob(decoded))
+    if (Array.isArray(parsed)) {
+      return parsed
+    }
   } catch {
-    return []
+    // Se houver erro, limpa o cookie corrompido
+    saveCombosToStorage([])
   }
+
+  return []
 }
 
 function saveCombosToStorage(combos: ComboCartItem[]): void {
   if (typeof window === "undefined") return
 
-  const encoded = btoa(JSON.stringify(combos))
-  const maxAge = 60 * 60 * 24 * 7 // 7 dias
+  try {
+    const encoded = btoa(JSON.stringify(combos))
+    const maxAge = 60 * 60 * 24 * 7 // 7 dias
 
-  document.cookie = `${COMBO_STORAGE_KEY}=${encodeURIComponent(encoded)}; path=/; max-age=${maxAge}; SameSite=Strict; Secure`
+    document.cookie = `${COMBO_STORAGE_KEY}=${encodeURIComponent(encoded)}; path=/; max-age=${maxAge}; SameSite=Lax`
+  } catch {
+    // Erro ao salvar - ignora silenciosamente
+  }
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
@@ -100,12 +111,27 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
 
+  const refreshCart = useCallback(() => {
+    const latestCart = getCartFromStorage()
+    const latestCombos = getCombosFromStorage()
+    setCart(latestCart)
+    setComboItems(latestCombos)
+  }, [])
+
   // Inicialização
   useEffect(() => {
     setMounted(true)
-    setCart(getCartFromStorage())
-    setComboItems(getCombosFromStorage())
-  }, [])
+    refreshCart()
+  }, [refreshCart])
+
+  useEffect(() => {
+    const handleFocus = () => {
+      refreshCart()
+    }
+
+    window.addEventListener("focus", handleFocus)
+    return () => window.removeEventListener("focus", handleFocus)
+  }, [refreshCart])
 
   // Funções de controle do drawer/carrinho
   const openCart = () => setIsOpen(true)
@@ -143,6 +169,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   // Operações com combos
   const addComboToCart = (combo: ComboData, showNumbers: boolean) => {
+    const currentCombos = getCombosFromStorage()
+
     const newCombo: ComboCartItem = {
       id: generateId(),
       type: "combo",
@@ -159,20 +187,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
       totalGames: combo.games.reduce((sum, g) => sum + g.quantity, 0),
     }
 
-    const updated = [...comboItems, newCombo]
+    const updated = [...currentCombos, newCombo]
     setComboItems(updated)
     saveCombosToStorage(updated)
     setIsOpen(true)
   }
 
   const removeComboItem = (comboId: string) => {
-    const updated = comboItems.filter((c) => c.id !== comboId)
+    const currentCombos = getCombosFromStorage()
+    const updated = currentCombos.filter((c) => c.id !== comboId)
     setComboItems(updated)
     saveCombosToStorage(updated)
   }
 
   const toggleComboNumbers = (comboId: string) => {
-    const updated = comboItems.map((c) => (c.id === comboId ? { ...c, showNumbers: !c.showNumbers } : c))
+    const currentCombos = getCombosFromStorage()
+    const updated = currentCombos.map((c) => (c.id === comboId ? { ...c, showNumbers: !c.showNumbers } : c))
     setComboItems(updated)
     saveCombosToStorage(updated)
   }
@@ -205,6 +235,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         clearAllItems,
         toggleComboNumbers,
         getTotal,
+        refreshCart,
       }}
     >
       {mounted ? children : children}

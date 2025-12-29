@@ -4,6 +4,9 @@ import { useState, useEffect } from "react"
 import { NumberSelectorModal } from "./number-selector-modal"
 import { CombosCarousel } from "./combos-carousel"
 import { LOTTERY_DRAW_DATES, calculateTimeRemaining } from "@/lib/lottery-utils"
+import { useCart } from "./cart-context"
+
+const MEGA_HEADER = "https://www.loteriasonline.caixa.gov.br/silce-web/images/background/topo_card_mega-sena.png"
 
 export function MainContent() {
   const [modalOpen, setModalOpen] = useState(false)
@@ -15,6 +18,7 @@ export function MainContent() {
   } | null>(null)
 
   const [countdowns, setCountdowns] = useState<Record<string, string>>({})
+  const { addItem } = useCart()
 
   useEffect(() => {
     const updateCountdowns = () => {
@@ -44,8 +48,12 @@ export function MainContent() {
     return countdowns[name.toLowerCase()] || "Calculando..."
   }
 
+  const handleAddBestSeller = (dezenas: number, price: number) => {
+    addItem(`Bolão Mega da Virada - ${dezenas} dezenas`, "bolao", price, "#00a651", "2955")
+  }
+
   return (
-    <main className="flex-1 overflow-x-hidden">
+    <main className="flex-1">
       <section
         className="relative overflow-hidden"
         style={{
@@ -55,7 +63,7 @@ export function MainContent() {
           minHeight: "380px",
         }}
       >
-        <div className="max-w-[1900px] mx-auto px-4 sm:px-6 py-8 sm:py-12 relative z-10 overflow-hidden">
+        <div className="max-w-[1900px] mx-auto px-4 sm:px-6 py-8 sm:py-12 relative z-10">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 sm:gap-8">
             <div className="flex-1 text-white text-center md:text-left">
               <h1
@@ -90,14 +98,55 @@ export function MainContent() {
         </div>
       </section>
 
-      <section className="py-8 sm:py-12 bg-white overflow-x-hidden">
+      <section className="py-8 sm:py-12 bg-white">
+        <div className="max-w-[1900px] mx-auto px-4 sm:px-10">
+          <h2
+            className="text-[32px] sm:text-[48px] md:text-[62px] mb-6 sm:mb-10"
+            style={{ letterSpacing: "-2.17px", lineHeight: "1.2" }}
+          >
+            <span style={{ fontFamily: "caixaStdBook, sans-serif", fontWeight: 300, color: "#adc0c4" }}>Promoções </span>
+            <span style={{ fontFamily: "caixaStdBold, sans-serif", fontWeight: 800, color: "#0066b3" }}>
+              Exclusivas
+            </span>
+          </h2>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-0 justify-items-center">
+            <BestSellerCard
+              dezenas={15}
+              multiplicador="37"
+              price={49.9}
+              headerImage={MEGA_HEADER}
+              onAddToCart={() => handleAddBestSeller(15, 49.9)}
+            />
+
+            <BestSellerCard
+              dezenas={18}
+              multiplicador="173"
+              price={79.9}
+              isHot={true}
+              headerImage={MEGA_HEADER}
+              onAddToCart={() => handleAddBestSeller(18, 79.9)}
+            />
+
+            <BestSellerCard
+              dezenas={20}
+              multiplicador="1327"
+              price={99.9}
+              headerImage={MEGA_HEADER}
+              onAddToCart={() => handleAddBestSeller(20, 99.9)}
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className="py-8 sm:py-12 bg-white">
         <div className="max-w-[1900px] mx-auto px-4 sm:px-10">
           <h2
             className="text-[32px] sm:text-[48px] md:text-[62px] mb-6 sm:mb-10"
             style={{ letterSpacing: "-2.17px", lineHeight: "1.2" }}
           >
             <span style={{ fontFamily: "caixaStdBook, sans-serif", fontWeight: 300, color: "#adc0c4" }}>Todos os </span>
-            <span style={{ fontFamily: "caixaStdBold, sans-serif", fontWeight: 800, color: "#0066b3" }}>produtos</span>
+            <span style={{ fontFamily: "caixaStdBold, sans-serif", fontWeight: 800, color: "#0066b3" }}>Produtos sem Promoções</span>
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-10 mb-6 sm:mb-10">
@@ -112,7 +161,7 @@ export function MainContent() {
               sorteioData="31/12/2025 às 22h00"
               diasRestantes={getCountdown("mega da virada")}
               showBolao={true}
-              aposteValor={6.0}
+              aposteValor={3.0}
               animationDelay={0}
               onOpenModal={openModal}
             />
@@ -128,7 +177,7 @@ export function MainContent() {
               sorteioData="29/12/2025 às 21h00"
               diasRestantes={getCountdown("lotofácil")}
               showBolao={true}
-              aposteValor={3.5}
+              aposteValor={1.50}
               animationDelay={1}
               onOpenModal={openModal}
             />
@@ -144,7 +193,7 @@ export function MainContent() {
               sorteioData="29/12/2025 às 21h00"
               diasRestantes={getCountdown("quina")}
               showBolao={true}
-              aposteValor={3.0}
+              aposteValor={1.25}
               animationDelay={2}
               onOpenModal={openModal}
             />
@@ -160,7 +209,7 @@ export function MainContent() {
               sorteioData="31/12/2025 às 17h00"
               diasRestantes={getCountdown("+milionária")}
               showBolao={true}
-              aposteValor={6.0}
+              aposteValor={3.0}
               animationDelay={3}
               onOpenModal={openModal}
             />
@@ -178,7 +227,7 @@ export function MainContent() {
               sorteioData="29/12/2025 às 21h00"
               diasRestantes={getCountdown("lotomania")}
               showBolao={false}
-              aposteValor={3.0}
+              aposteValor={1.5}
               animationDelay={4}
               onOpenModal={openModal}
             />
@@ -196,7 +245,7 @@ export function MainContent() {
               sorteioData="30/12/2025 às 21h00"
               diasRestantes={getCountdown("timemania")}
               showBolao={true}
-              aposteValor={3.5}
+              aposteValor={1.75}
               animationDelay={5}
               onOpenModal={openModal}
             />
@@ -212,7 +261,7 @@ export function MainContent() {
               sorteioData="29/12/2025 às 21h00"
               diasRestantes={getCountdown("dupla sena")}
               showBolao={true}
-              aposteValor={3.0}
+              aposteValor={1.25}
               animationDelay={6}
               onOpenModal={openModal}
             />
@@ -229,7 +278,7 @@ export function MainContent() {
               diasRestantes={getCountdown("loteca")}
               aguardando={true}
               showBolao={false}
-              aposteValor={4.0}
+              aposteValor={2.0}
               animationDelay={7}
               onOpenModal={openModal}
             />
@@ -250,7 +299,7 @@ export function MainContent() {
                 sorteioData="30/12/2025 às 21h00"
                 diasRestantes={getCountdown("dia de sorte")}
                 showBolao={true}
-                aposteValor={2.5}
+                aposteValor={1.25}
                 animationDelay={8}
                 onOpenModal={openModal}
               />
@@ -270,7 +319,7 @@ export function MainContent() {
                 sorteioData="29/12/2025 às 21h00"
                 diasRestantes={getCountdown("super sete")}
                 showBolao={true}
-                aposteValor={3}
+                aposteValor={2.5}
                 animationDelay={9}
                 onOpenModal={openModal}
               />
@@ -281,7 +330,7 @@ export function MainContent() {
 
       <CombosCarousel />
 
-      <section className="py-8 sm:py-12 bg-white overflow-x-hidden">
+      <section className="py-8 sm:py-12 bg-white">
         <div className="max-w-[1900px] mx-auto px-4 sm:px-10 text-center">
           <h2
             className="text-[18px] sm:text-[24px] md:text-[28px] font-bold text-[#005AA5] mb-3"
@@ -345,6 +394,171 @@ export function MainContent() {
         />
       )}
     </main>
+  )
+}
+
+function BestSellerCard({
+  dezenas,
+  multiplicador,
+  price,
+  isHot = false,
+  onAddToCart,
+  headerImage,
+}: {
+  dezenas: number
+  multiplicador: string
+  price: number
+  isHot?: boolean
+  onAddToCart: () => void
+  headerImage: string
+}) {
+  return (
+    <div className="relative bg-white rounded-xl overflow-hidden shadow-lg flex flex-col w-full max-w-[320px] transition-all duration-300 ease-out hover:scale-105 hover:shadow-2xl">
+      {isHot && (
+        <div
+          className="absolute top-0 right-0 z-10 bg-pink-500 text-white text-[10px] sm:text-[12px] font-bold px-3 sm:px-4 py-1 sm:py-1.5"
+          style={{
+            fontFamily: "caixaStdBold, sans-serif",
+            transform: "rotate(0deg)",
+            borderBottomLeftRadius: "8px",
+          }}
+        >
+          MAIS VENDIDO
+        </div>
+      )}
+
+      <div
+        className="px-8 sm:px-10 py-4 sm:py-5 flex items-center justify-center bg-cover bg-center"
+        style={{
+          backgroundImage: `url('${headerImage}')`,
+          minHeight: "60px",
+        }}
+      >
+        <span
+          className="text-[18px] sm:text-[22px] text-center"
+          style={{
+            color: "#fff",
+            fontFamily: "futuraBold, sans-serif",
+            fontWeight: 700,
+            letterSpacing: "-0.79968px",
+            lineHeight: "1.2",
+          }}
+        >
+          mega da virada
+        </span>
+      </div>
+
+      <div
+        className="p-4 sm:p-6 flex-1 flex flex-col items-center text-center"
+        style={{
+          backgroundImage: `url('https://www.loteriasonline.caixa.gov.br/silce-web/images/background/backgroud-trevos.png')`,
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "center bottom",
+          backgroundSize: "contain",
+          backgroundColor: "#fff",
+        }}
+      >
+        <span
+          className="text-[24px] sm:text-[32px] leading-tight"
+          style={{
+            color: "#00a651",
+            fontFamily: "caixaStdBold, sans-serif",
+            fontWeight: 700,
+            letterSpacing: "-0.98px",
+            lineHeight: "1.2",
+          }}
+        >
+          R$1 Bilhão
+        </span>
+        <span
+          className="text-[14px] sm:text-[17px] text-[#1f2a47] mt-1"
+          style={{
+            fontFamily: "caixaStdRegular, sans-serif",
+            fontWeight: "normal",
+            marginBottom: "12px",
+            letterSpacing: "-0.49px",
+            lineHeight: "1.2",
+          }}
+        >
+          Prêmio estimado do concurso 2955
+        </span>
+
+        <div className="mt-4 w-full">
+          <p
+            className="text-[16px] sm:text-[18px] font-bold text-[#00a651]"
+            style={{ fontFamily: "caixaStdBold, sans-serif" }}
+          >
+            1 Bolão com {dezenas} dezenas
+          </p>
+          <p
+            className="text-[13px] sm:text-[15px] text-[#1f2a47] mt-2"
+            style={{ fontFamily: "caixaStdRegular, sans-serif" }}
+          >
+            Sua chance de ganhar aumenta em <strong>{multiplicador} vezes</strong>
+          </p>
+        </div>
+
+        <div className="mt-4 w-full text-center">
+          <p
+            className="text-[14px] sm:text-[16px]"
+            style={{ fontFamily: "caixaStdRegular, sans-serif", lineHeight: "1.4" }}
+          >
+            <span style={{ color: "#4c556c" }}>Sorteio </span>
+            <span style={{ color: "#4c556c", fontFamily: "caixaStdRegular, sans-serif", fontWeight: "bold" }}>
+              Quarta-Feira
+            </span>
+          </p>
+          <p
+            className="text-[14px] sm:text-[16px]"
+            style={{
+              color: "#00a651",
+              fontFamily: "caixaStdBold, sans-serif",
+              fontWeight: 700,
+              lineHeight: "1.4",
+            }}
+          >
+            31/12/2025 às 22h00
+          </p>
+        </div>
+
+        <div className="mt-6 flex flex-col gap-2 w-full">
+          <p
+            className="text-[22px] sm:text-[26px] font-bold text-[#00a651]"
+            style={{ fontFamily: "caixaStdBold, sans-serif" }}
+          >
+            R$ {price.toFixed(2).replace(".", ",")}
+          </p>
+          <p className="text-[12px] sm:text-[14px] text-gray-500" style={{ fontFamily: "caixaStdRegular, sans-serif" }}>
+            Valor da cota
+          </p>
+          <button
+            onClick={onAddToCart}
+            className="mx-auto text-white hover:opacity-90 transition-all hover:scale-[1.02] hover:shadow-lg"
+            style={{
+              width: "100%",
+              maxWidth: "260px",
+              height: "55px",
+              backgroundColor: "#00a651",
+              borderRadius: "8px",
+              marginTop: "10px",
+              marginBottom: "10px",
+            }}
+          >
+            <span
+              style={{
+                fontFamily: "futuraBold, sans-serif",
+                fontWeight: "bold",
+                fontSize: "18px",
+                lineHeight: "27px",
+                color: "#fff",
+              }}
+            >
+              Comprar Cota
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -502,50 +716,72 @@ function GameCard({
           </p>
         </div>
 
-        <div className="mt-4 sm:mt-6 flex flex-col gap-2 w-full">
+        <div className="mt-6 flex flex-col gap-2 w-full">
           {showBolao && (
-            <button
-              onClick={handleBolao}
-              className="w-full py-2.5 sm:py-3 px-4 rounded border-2 text-[13px] sm:text-[15px] font-bold transition-all duration-200 cursor-pointer"
-              style={{
-                borderColor: color,
-                color: color,
-                fontFamily: "caixaStdBold, sans-serif",
-                fontWeight: 700,
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = color
-                e.currentTarget.style.color = "#fff"
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "transparent"
-                e.currentTarget.style.color = color
-              }}
-            >
-              Bolão
-            </button>
+            <>
+              <button
+                onClick={handleBolao}
+                className="mx-auto border-2 hover:opacity-80 transition-all hover:scale-[1.02] btn-pulse"
+                style={{
+                  width: "100%",
+                  maxWidth: "260px",
+                  height: "55px",
+                  borderColor: accentColor,
+                  color: accentColor,
+                  fontFamily: "caixaStdBold, sans-serif",
+                  fontSize: "18px",
+                  fontWeight: 400,
+                  borderRadius: "8px",
+                  lineHeight: "28px",
+                  backgroundColor: "#fff",
+                  marginTop: "12px",
+                  marginBottom: "10px",
+                }}
+              >
+                Compre seu bolão
+              </button>
+              <span
+                className="text-center text-[22px] sm:text-[26px] text-[#1f2a47]"
+                style={{ fontFamily: "caixaStdRegular, sans-serif", letterSpacing: "-0.84px", lineHeight: "31px" }}
+              >
+                ou
+              </span>
+            </>
           )}
           <button
             onClick={handleAposta}
-            className="w-full py-2.5 sm:py-3 px-4 rounded text-white text-[13px] sm:text-[15px] font-bold transition-all duration-200 cursor-pointer flex items-center justify-center gap-2"
+            className="mx-auto text-white hover:opacity-90 transition-all hover:scale-[1.02] hover:shadow-lg"
             style={{
+              width: "100%",
+              maxWidth: "260px",
+              height: "55px",
               backgroundColor: color,
-              fontFamily: "caixaStdBold, sans-serif",
-              fontWeight: 700,
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.filter = "brightness(1.1)"
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.filter = "brightness(1)"
+              borderRadius: "8px",
+              marginTop: "10px",
+              marginBottom: "10px",
             }}
           >
-            <span>Aposte</span>
             <span
-              className="text-[11px] sm:text-[13px] opacity-90"
-              style={{ fontFamily: "caixaStdRegular, sans-serif", fontWeight: "normal" }}
+              style={{
+                fontFamily: "futuraBold, sans-serif",
+                fontWeight: "bold",
+                fontSize: "18px",
+                lineHeight: "27px",
+                color: "#fff",
+              }}
             >
-              (a partir de R${aposteValor.toFixed(2).replace(".", ",")})
+              Aposte
+            </span>
+            <br />
+            <span
+              style={{
+                fontFamily: "futuraBold, sans-serif",
+                fontSize: "16px",
+                lineHeight: "27px",
+                color: "#fff",
+              }}
+            >
+              por R$ {aposteValor.toFixed(2).replace(".", ",")}
             </span>
           </button>
         </div>
