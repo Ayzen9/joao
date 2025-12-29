@@ -53,7 +53,6 @@ export function CartSidebar() {
             </div>
           ) : (
             <div className="space-y-4">
-              {/* Combo Items */}
               {comboItems.map((combo) => (
                 <div key={combo.id} className="bg-[#f0f7ff] rounded-2xl p-5 border border-[#005aa5]/20 shadow-sm">
                   <div className="flex items-start justify-between gap-3">
@@ -88,89 +87,103 @@ export function CartSidebar() {
                 </div>
               ))}
 
-              {/* Individual Cart Items */}
-              {cart.items.map((item) => (
-                <div key={item.id} className="bg-gray-50 rounded-2xl p-5 border border-gray-200 shadow-sm">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1">
-                      <div
-                        className="inline-block px-4 py-1.5 rounded-full text-white text-[14px] mb-3"
-                        style={{ backgroundColor: item.color, fontFamily: "futuraBold, sans-serif" }}
-                      >
-                        {(item.lottery || "APOSTA").toUpperCase()}
-                      </div>
-                      <p className="text-[15px] text-[#4c556c]" style={{ fontFamily: "caixaStdRegular, sans-serif" }}>
-                        {item.type === "bolao" ? "Bolão" : "Aposta"} - Concurso {item.concurso}
-                      </p>
+              {cart.items.map((item) => {
+                const hasNumbers = item.numbers && (
+                  (Array.isArray(item.numbers) && item.numbers.length > 0) ||
+                  ("hidden" in item.numbers && item.numbers.hidden)
+                )
+                const isHidden = item.numbers && "hidden" in item.numbers && item.numbers.hidden
 
-                      {item.numbers && item.numbers.length > 0 && (
-                        <div className="mt-3">
-                          <p
-                            className="text-[12px] text-[#4c556c] mb-2"
-                            style={{ fontFamily: "caixaStdBold, sans-serif" }}
-                          >
-                            Números:
-                          </p>
-                          <div className="flex flex-wrap gap-1">
-                            {item.numbers.map((num, idx) => (
-                              <span
-                                key={idx}
-                                className="inline-flex items-center justify-center w-7 h-7 rounded-full text-[11px] text-white"
-                                style={{ backgroundColor: item.color, fontFamily: "caixaStdBold" }}
-                              >
-                                {num.toString().padStart(2, "0")}
-                              </span>
-                            ))}
-                          </div>
+                return (
+                  <div key={item.id} className="bg-gray-50 rounded-2xl p-5 border border-gray-200 shadow-sm">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1">
+                        <div
+                          className="inline-block px-4 py-1.5 rounded-full text-white text-[14px] mb-3"
+                          style={{ backgroundColor: item.color, fontFamily: "futuraBold, sans-serif" }}
+                        >
+                          {(item.lottery || "APOSTA").toUpperCase()}
                         </div>
-                      )}
-
-                      {item.bonus && item.bonus.length > 0 && (
-                        <div className="mt-2">
-                          <p
-                            className="text-[12px] text-[#4c556c] mb-1"
-                            style={{ fontFamily: "caixaStdBold, sans-serif" }}
-                          >
-                            Bônus:
-                          </p>
-                          <div className="flex flex-wrap gap-1">
-                            {item.bonus.map((num, idx) => (
-                              <span
-                                key={idx}
-                                className="inline-flex items-center justify-center px-2 py-1 rounded-full text-[11px] text-white"
-                                style={{ backgroundColor: item.color, fontFamily: "caixaStdBold" }}
-                              >
-                                {num}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {item.team && (
-                        <p className="mt-2 text-[13px]" style={{ fontFamily: "caixaStdRegular, sans-serif" }}>
-                          <span className="text-[#4c556c]">Time: </span>
-                          <span style={{ color: item.color, fontFamily: "caixaStdBold" }}>{item.team}</span>
+                        <p className="text-[15px] text-[#4c556c]" style={{ fontFamily: "caixaStdRegular, sans-serif" }}>
+                          {item.type === "bolao" ? "Bolão" : "Aposta"} - Concurso {item.concurso}
                         </p>
-                      )}
 
-                      <p className="text-[24px] text-[#005AA5] mt-3" style={{ fontFamily: "caixaStdBold, sans-serif" }}>
-                        R$ {item.price.toFixed(2).replace(".", ",")}
-                      </p>
+                        {hasNumbers && (
+                          <div className="mt-3">
+                            <p
+                              className="text-[12px] text-[#4c556c] mb-2"
+                              style={{ fontFamily: "caixaStdBold, sans-serif" }}
+                            >
+                              Números:
+                            </p>
+
+                            {isHidden ? (
+                              <p className="text-[13px] text-gray-600 italic">
+                                Números ocultos (revelados após pagamento)
+                              </p>
+                            ) : Array.isArray(item.numbers) ? (
+                              <div className="flex flex-wrap gap-1">
+                                {item.numbers.map((num, idx) => (
+                                  <span
+                                    key={idx}
+                                    className="inline-flex items-center justify-center w-7 h-7 rounded-full text-[11px] text-white"
+                                    style={{ backgroundColor: item.color, fontFamily: "caixaStdBold" }}
+                                  >
+                                    {num.toString().padStart(2, "0")}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : null}
+                          </div>
+                        )}
+
+                        {item.bonus && item.bonus.length > 0 && (
+                          <div className="mt-2">
+                            <p
+                              className="text-[12px] text-[#4c556c] mb-1"
+                              style={{ fontFamily: "caixaStdBold, sans-serif" }}
+                            >
+                              Bônus:
+                            </p>
+                            <div className="flex flex-wrap gap-1">
+                              {item.bonus.map((num, idx) => (
+                                <span
+                                  key={idx}
+                                  className="inline-flex items-center justify-center px-2 py-1 rounded-full text-[11px] text-white"
+                                  style={{ backgroundColor: item.color, fontFamily: "caixaStdBold" }}
+                                >
+                                  {num}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {item.team && (
+                          <p className="mt-2 text-[13px]" style={{ fontFamily: "caixaStdRegular, sans-serif" }}>
+                            <span className="text-[#4c556c]">Time: </span>
+                            <span style={{ color: item.color, fontFamily: "caixaStdBold" }}>{item.team}</span>
+                          </p>
+                        )}
+
+                        <p className="text-[24px] text-[#005AA5] mt-3" style={{ fontFamily: "caixaStdBold, sans-serif" }}>
+                          R$ {item.price.toFixed(2).replace(".", ",")}
+                        </p>
+                      </div>
+
+                      <button
+                        onClick={() => removeItem(item.id)}
+                        className="text-gray-400 hover:text-red-500 transition-colors p-2 hover:bg-red-50 rounded-full cursor-pointer"
+                      >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <polyline points="3,6 5,6 21,6" />
+                          <path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6M8,6V4a2,2,0,0,1,2-2h4a2,2,0,0,1,2,2V6" />
+                        </svg>
+                      </button>
                     </div>
-
-                    <button
-                      onClick={() => removeItem(item.id)}
-                      className="text-gray-400 hover:text-red-500 transition-colors p-2 hover:bg-red-50 rounded-full cursor-pointer"
-                    >
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <polyline points="3,6 5,6 21,6" />
-                        <path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6M8,6V4a2,2,0,0,1,2-2h4a2,2,0,0,1,2,2V6" />
-                      </svg>
-                    </button>
                   </div>
-                </div>
-              ))}
+                )
+              })}
 
               {hasItems && (
                 <button
