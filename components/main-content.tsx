@@ -45,7 +45,7 @@ export function MainContent() {
   }
 
   return (
-    <main className="flex-1">
+    <main className="flex-1 overflow-x-hidden">
       <section
         className="relative overflow-hidden"
         style={{
@@ -55,11 +55,11 @@ export function MainContent() {
           minHeight: "380px",
         }}
       >
-        <div className="max-w-[1900px] mx-auto px-6 py-12 relative z-10">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-            <div className="flex-1 text-white text-left">
+        <div className="max-w-[1900px] mx-auto px-4 sm:px-6 py-8 sm:py-12 relative z-10 overflow-hidden">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6 sm:gap-8">
+            <div className="flex-1 text-white text-center md:text-left">
               <h1
-                className="text-[55px] font-bold mb-5 leading-tight"
+                className="text-[28px] sm:text-[40px] md:text-[55px] font-bold mb-3 sm:mb-5 leading-tight"
                 style={{
                   fontFamily: "caixaStdBold, sans-serif",
                   fontWeight: 800,
@@ -70,7 +70,7 @@ export function MainContent() {
                 Loterias Online da CAIXA
               </h1>
               <p
-                className="text-[20px] whitespace-nowrap"
+                className="text-[14px] sm:text-[18px] md:text-[20px]"
                 style={{
                   fontFamily: "caixaStdBook, sans-serif",
                   color: "#fff",
@@ -79,25 +79,28 @@ export function MainContent() {
                 Portal Loterias CAIXA: agora você pode apostar na sorte de onde estiver.
               </p>
             </div>
-            <div className="flex-shrink-0 self-end">
+            <div className="hidden sm:block flex-shrink-0 self-end">
               <img
                 src="https://www.loteriasonline.caixa.gov.br/silce-web/images/illustrations/home-com-sorte.png"
                 alt="Loterias Online - Volantes"
-                className="max-w-[400px] md:max-w-[480px] w-full h-auto translate-y-[48px]"
+                className="max-w-[280px] sm:max-w-[400px] md:max-w-[480px] w-full h-auto translate-y-[48px]"
               />
             </div>
           </div>
         </div>
       </section>
 
-      <section className="py-12 bg-white">
-        <div className="max-w-[1900px] mx-auto px-10">
-          <h2 className="text-[62px] mb-10" style={{ letterSpacing: "-2.17px", lineHeight: "74px" }}>
+      <section className="py-8 sm:py-12 bg-white overflow-x-hidden">
+        <div className="max-w-[1900px] mx-auto px-4 sm:px-10">
+          <h2
+            className="text-[32px] sm:text-[48px] md:text-[62px] mb-6 sm:mb-10"
+            style={{ letterSpacing: "-2.17px", lineHeight: "1.2" }}
+          >
             <span style={{ fontFamily: "caixaStdBook, sans-serif", fontWeight: 300, color: "#adc0c4" }}>Todos os </span>
             <span style={{ fontFamily: "caixaStdBold, sans-serif", fontWeight: 800, color: "#0066b3" }}>produtos</span>
           </h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-10 mb-6 sm:mb-10">
             <GameCard
               name="mega da virada"
               headerImage="https://www.loteriasonline.caixa.gov.br/silce-web/images/background/topo_card_mega-sena.png"
@@ -163,7 +166,7 @@ export function MainContent() {
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-10 mb-6 sm:mb-10">
             <GameCard
               name="lotomania"
               headerImage="https://www.loteriasonline.caixa.gov.br/silce-web/images/background/topo_card_lotomania.png"
@@ -232,7 +235,7 @@ export function MainContent() {
             />
           </div>
 
-          <div className="flex justify-center gap-10">
+          <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6 lg:gap-10">
             <div className="w-full sm:w-1/2 lg:w-[calc(25%-30px)]">
               <GameCard
                 name="dia de sorte"
@@ -278,25 +281,31 @@ export function MainContent() {
 
       <CombosCarousel />
 
-      <section className="py-12 bg-white">
-        <div className="max-w-[1900px] mx-auto px-10 text-center">
-          <h2 className="text-[28px] font-bold text-[#005AA5] mb-3" style={{ fontFamily: "caixaStdBold, sans-serif" }}>
+      <section className="py-8 sm:py-12 bg-white overflow-x-hidden">
+        <div className="max-w-[1900px] mx-auto px-4 sm:px-10 text-center">
+          <h2
+            className="text-[18px] sm:text-[24px] md:text-[28px] font-bold text-[#005AA5] mb-3"
+            style={{ fontFamily: "caixaStdBold, sans-serif" }}
+          >
             Baixe o Aplicativo das Loterias CAIXA e tenha uma experiência completa na palma da mão!
           </h2>
-          <p className="text-[18px] text-gray-600 mb-10" style={{ fontFamily: "caixaStdBook, sans-serif" }}>
+          <p
+            className="text-[14px] sm:text-[16px] md:text-[18px] text-gray-600 mb-6 sm:mb-10"
+            style={{ fontFamily: "caixaStdBook, sans-serif" }}
+          >
             Para baixar o aplicativo, clique em uma das lojas abaixo ou aponte a câmera do celular para o QR Code!
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-16">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-8 sm:gap-16">
             <div className="flex flex-col items-center">
               <a href="https://apps.apple.com/br/app/loterias-caixa/id1436530324" className="mb-5">
                 <img
                   src="https://www.loteriasonline.caixa.gov.br/silce-web/images/appleStore.png"
                   alt="Baixar na App Store"
-                  className="h-[55px]"
+                  className="h-[45px] sm:h-[55px]"
                 />
               </a>
-              <div className="w-[140px] h-[140px] bg-white border border-gray-300 rounded-xl flex items-center justify-center p-5">
+              <div className="w-[120px] h-[120px] sm:w-[140px] sm:h-[140px] bg-white border border-gray-300 rounded-xl flex items-center justify-center p-4 sm:p-5">
                 <img
                   src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAZoAAAGaAQAAAAAefbjOAAADFklEQVR4nO2czW3cMBBG34QCfKQAF7ClaDtISYZLSgdiKS7AgHQ0QOHLgaQsrw9BsMl6LQ0PhtarB5PQYH6+GdnEX6/04+8ZcMghhxxyyCGH9glZXR0wm9kZ1qvFypXZ+sW3OJNDV0GDJGkCUg/AYqQ+COYH2ZkgSdJH6Hbbc+h2EOVJDxMwTEEQM9IEknK7ZQoCgorljHd+Jof+LTQ/yM4xQ7IOhgns/H/+kkP3CHWXvxh+PaJkYMTXTumUP91y72dy6BqoPe4oYAaIGYOQAWTEIJhhq2Td+Zkc+gdQMjOzHmBeY8XcwfDSYWeWUmp81fYcurWP2DiA1Id2GXP7GD9q3Xd+Joeugba1Bq3I1EgtLkqZcfntnZ/JoeshPZ8kiG9Fpiq1xjAtTaECNLJWHd/iTA5d4yOKADES1H6sKkRsLmOY2s3uI/YMtYcMaIy56VKrTDUCENWCiFvEUaCYqeLU/CDppcOsD7KnIlcuBvHNa40DQGtmGSSp+YhBubqM8aO3cBV791CrPmdoHiCI1L9SxSmCDEK2ct+Nt+fQzaFN9amxVBhQ84iSUdSOZ0k5PY/YPVQtouQRBGmMEkMzhhowYrMNjxq7h5pFrBMQNYV4V63wPOJQ0FaPqGMQsHUZZSqihhOPGvuHtnnEx4ziIo8oy33EQSA9nzK1uxkz9vTSbSZmShCpfuMrtufQ1+QR5ZmvtUbNKKjhpPa83EfsHWqx4t0sWsezNkCj1pU9jzgaFGtLg3TK2NO0WOl4Wr9YCSJfuj2HbgFtVOz6cVqFqKZHlDXI9YjjQK24kMpoXeopPoJ0ytUYmN1HHAEqT3ltaWSlnxPA0pEsyIgA82MGFvO+xv6hTWbZRmQybZauCVZr3umZ5XGg97c9CbIzoOeeagypCBVv/t7nAaDPr+fMhuDNNGgxlYARJ2wYl9tvz6GbQ58tgpZWpHMQ6RwoVpJs7Xrc+Zkcuga6fKdLzI9lOsaG6REjTmVOxjbQnZ/JoWugVcUGaH3OOohb1Et4H6DxzHL/kOnP91wu/89kDjnkkEMOOeQQwG+V5mYWnB/lswAAAABJRU5ErkJggg=="
                   alt="QR Code para baixar o app Loterias CAIXA na App Store"
@@ -310,10 +319,10 @@ export function MainContent() {
                 <img
                   src="https://www.loteriasonline.caixa.gov.br/silce-web/images/googlePlay.png"
                   alt="Disponível no Google Play"
-                  className="h-[55px]"
+                  className="h-[45px] sm:h-[55px]"
                 />
               </a>
-              <div className="w-[140px] h-[140px] bg-white border border-gray-300 rounded-xl flex items-center justify-center p-5">
+              <div className="w-[120px] h-[120px] sm:w-[140px] sm:h-[140px] bg-white border border-gray-300 rounded-xl flex items-center justify-center p-4 sm:p-5">
                 <img
                   src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAcIAAAHCAQAAAABUY/ToAAADeUlEQVR4nO2cXWrjMBSFzx0b8mjDLKBLUXYwSyqzM3spXUBBfizYnHmQriQnLQMlIW4496HEjT6kwEU690c24ns2//omCIgUKVKkSJEiRR6PtGw97IzNzMbN7LyYASifFh91fvBqRR6LBEkSgSQZO5IR4DSs4ISOwEDmIbFjM3j6Wb9T5P3Jpewv6GivbycC2Kx+CwAws/52c4p8TtLOADhhM3vlCoS4mdl41zlFPhk5j4Cd0RFYTuRf60HG+84p8keTfjQNBLAACNNmmMcOxLIZgG4FBsIAoE1I/qzfKfLu5GzmR9ZyIkL0zSh9WnoA2FJYdqs5RT4JCe4NSNFYjstScBZ4bYrLRLrVcB0hAq2/xDpkBScAwKDYXuSl5V2l7D6MAELMjwh790lD5EMiW9sdY0DdaRpHyl+sANDpLBN5Ye5Ba6uMshRC2oLyqebeJB8SuTd3GgAhZqdJyqgIaz/QOh8nHxLZWlsCG1aXQsm6tEFVsV3LZ/IhkcVqRJ/LrQCynI5du0GR0kMivybJuJnZy+rbzdKn4n1WQQOJ2Xo/5B68WpHHJIcVnDwdTUbAztgMWHI1xF4jwL/jDecU+Ryk18uW37TArQeWERYmpv8BAIhlhBfNNuPjVivyiKTroRqDxY5ND1pwTV2Tj9JDIvfWJIRayyooeVN+zFls+ZDIz8jAj9xPbSNgNnbk5HrIzkBRSyXy/5G/U+QdyBLbw0MyeBwfSnt1Osa4thVZ7UMi3drDC61LcRrY9pzlsF56SOSlZY8YVneaUrxH7R9qso2dej9E7i3F9gb0sPBmIJYTMf9Ze2IZ0/0yYPhIET3nEYrtRe6t9FO/9zkDlPylY04SYes5j++wQKQ/D1ytyCOSu17YmFVQbklDq6n9pJOmFnlp7j6lcTF+7kiebZQeEnlptW6fHifAO2C9cfG6H0Q+JLKxfXraNxkATZ66XO5IziUfErmzJsdYrwVlFVTrZb4ZyYdEXluz+9DLrZ6T9qIZWRqLID0k8gvS3/uR7rTOdspyulbJ5nrF9UZzinxOMt/mKC1pIW7p9VX5hofXRI6xWpGHJHNZbLP0BhB7WVMtP+mheSwt14dYrcgDkNd6qFwBSn1p9bLrUKv60kMir8jy3g97jemNMcmR7FwbhppG65vMKfJJSOP/x3xqese5SJEiRYoUKfJJyH+/5WfFxESrwgAAAABJRU5ErkJggg=="
                   alt="QR Code para baixar o app Loterias CAIXA no Google Play"
@@ -390,20 +399,20 @@ function GameCard({
       style={{ animationDelay: `${animationDelay * 0.1}s` }}
     >
       <div
-        className="px-5 py-5 flex items-center justify-center bg-cover bg-center"
+        className="px-4 sm:px-5 py-4 sm:py-5 flex items-center justify-center bg-cover bg-center"
         style={{
           backgroundImage: `url('${headerImage}')`,
-          minHeight: "65px",
+          minHeight: "60px",
         }}
       >
         <span
-          className="text-[26px] text-center game-title"
+          className="text-[20px] sm:text-[26px] text-center game-title"
           style={{
             color: titleColor,
             fontFamily: "futuraBold, sans-serif",
             fontWeight: 700,
             letterSpacing: "-0.79968px",
-            lineHeight: "31px",
+            lineHeight: "1.2",
           }}
         >
           {name}
@@ -411,7 +420,7 @@ function GameCard({
       </div>
 
       <div
-        className="p-6 flex-1 flex flex-col items-center text-center"
+        className="p-4 sm:p-6 flex-1 flex flex-col items-center text-center"
         style={{
           backgroundImage: `url('https://www.loteriasonline.caixa.gov.br/silce-web/images/background/backgroud-trevos.png')`,
           backgroundRepeat: "no-repeat",
@@ -423,13 +432,13 @@ function GameCard({
         {aguardando ? (
           <>
             <p
-              className="text-[15px] text-[#1f2a47] mb-1"
+              className="text-[13px] sm:text-[15px] text-[#1f2a47] mb-1"
               style={{ fontFamily: "caixaStdRegular, sans-serif", fontWeight: "normal", letterSpacing: "-0.49px" }}
             >
               Próximo Concurso {concurso}
             </p>
             <p
-              className="text-[15px] text-[#1f2a47]"
+              className="text-[13px] sm:text-[15px] text-[#1f2a47]"
               style={{ fontFamily: "caixaStdRegular, sans-serif", fontWeight: "normal", letterSpacing: "-0.49px" }}
             >
               Aguardando estimativa de prêmio
@@ -438,25 +447,25 @@ function GameCard({
         ) : (
           <>
             <span
-              className="text-[32px] leading-tight"
+              className="text-[24px] sm:text-[32px] leading-tight"
               style={{
                 color: accentColor,
                 fontFamily: "caixaStdBold, sans-serif",
                 fontWeight: 700,
                 letterSpacing: "-0.98px",
-                lineHeight: "38px",
+                lineHeight: "1.2",
               }}
             >
               {prize}
             </span>
             <span
-              className="text-[17px] text-[#1f2a47] mt-1"
+              className="text-[14px] sm:text-[17px] text-[#1f2a47] mt-1"
               style={{
                 fontFamily: "caixaStdRegular, sans-serif",
                 fontWeight: "normal",
                 marginBottom: "12px",
                 letterSpacing: "-0.49px",
-                lineHeight: "18px",
+                lineHeight: "1.2",
               }}
             >
               Prêmio estimado do concurso {concurso}
@@ -464,96 +473,79 @@ function GameCard({
           </>
         )}
 
-        <div className="mt-6 w-full text-center">
-          <p className="text-[16px]" style={{ fontFamily: "caixaStdRegular, sans-serif", lineHeight: "22px" }}>
+        <div className="mt-4 sm:mt-6 w-full text-center">
+          <p
+            className="text-[14px] sm:text-[16px]"
+            style={{ fontFamily: "caixaStdRegular, sans-serif", lineHeight: "1.4" }}
+          >
             <span style={{ color: "#4c556c" }}>{sorteioLabel} </span>
             <span style={{ color: "#4c556c", fontFamily: "caixaStdRegular, sans-serif", fontWeight: "bold" }}>
               {sorteioDay}
             </span>
           </p>
           <p
-            className="text-[16px]"
+            className="text-[14px] sm:text-[16px]"
             style={{
               color: accentColor,
               fontFamily: "caixaStdBold, sans-serif",
               fontWeight: 700,
-              lineHeight: "22px",
+              lineHeight: "1.4",
             }}
           >
             {sorteioData}
           </p>
           <p
-            className="text-[16px] text-[#4c556c] mt-1"
-            style={{ fontFamily: "caixaStdRegular, sans-serif", lineHeight: "22px" }}
+            className="text-[13px] sm:text-[16px] text-[#4c556c] mt-1"
+            style={{ fontFamily: "caixaStdRegular, sans-serif", lineHeight: "1.4" }}
           >
             Apostas se encerram em {diasRestantes}
           </p>
         </div>
 
-        <div className="mt-6 flex flex-col gap-2 w-full">
+        <div className="mt-4 sm:mt-6 flex flex-col gap-2 w-full">
           {showBolao && (
-            <>
-              <button
-                onClick={handleBolao}
-                className="mx-auto border-2 hover:opacity-80 transition-all hover:scale-[1.02] btn-pulse"
-                style={{
-                  width: "260px",
-                  height: "65px",
-                  borderColor: accentColor,
-                  color: accentColor,
-                  fontFamily: "caixaStdBold, sans-serif",
-                  fontSize: "20px",
-                  fontWeight: 400,
-                  borderRadius: "8px",
-                  lineHeight: "28px",
-                  backgroundColor: "#fff",
-                  marginTop: "12px",
-                  marginBottom: "10px",
-                }}
-              >
-                Compre seu bolão
-              </button>
-              <span
-                className="text-center text-[26px] text-[#1f2a47]"
-                style={{ fontFamily: "caixaStdRegular, sans-serif", letterSpacing: "-0.84px", lineHeight: "31px" }}
-              >
-                ou
-              </span>
-            </>
+            <button
+              onClick={handleBolao}
+              className="w-full py-2.5 sm:py-3 px-4 rounded border-2 text-[13px] sm:text-[15px] font-bold transition-all duration-200 cursor-pointer"
+              style={{
+                borderColor: color,
+                color: color,
+                fontFamily: "caixaStdBold, sans-serif",
+                fontWeight: 700,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = color
+                e.currentTarget.style.color = "#fff"
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "transparent"
+                e.currentTarget.style.color = color
+              }}
+            >
+              Bolão
+            </button>
           )}
           <button
             onClick={handleAposta}
-            className="mx-auto text-white hover:opacity-90 transition-all hover:scale-[1.02] hover:shadow-lg"
+            className="w-full py-2.5 sm:py-3 px-4 rounded text-white text-[13px] sm:text-[15px] font-bold transition-all duration-200 cursor-pointer flex items-center justify-center gap-2"
             style={{
-              width: "260px",
-              height: "65px",
               backgroundColor: color,
-              borderRadius: "8px",
-              marginTop: "10px",
-              marginBottom: "10px",
+              fontFamily: "caixaStdBold, sans-serif",
+              fontWeight: 700,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.filter = "brightness(1.1)"
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.filter = "brightness(1)"
             }}
           >
+            <span>Aposte</span>
             <span
-              style={{
-                fontFamily: "futuraBold, sans-serif",
-                fontWeight: "bold",
-                fontSize: "20px",
-                lineHeight: "27px",
-                color: "#fff",
-              }}
+              className="text-[11px] sm:text-[13px] opacity-90"
+              style={{ fontFamily: "caixaStdRegular, sans-serif", fontWeight: "normal" }}
             >
-              Aposte
-            </span>
-            <br />
-            <span
-              style={{
-                fontFamily: "futuraBold, sans-serif",
-                fontSize: "20px",
-                lineHeight: "27px",
-                color: "#fff",
-              }}
-            >
-              por R$ {aposteValor.toFixed(2).replace(".", ",")}
+              (a partir de R${aposteValor.toFixed(2).replace(".", ",")})
             </span>
           </button>
         </div>
