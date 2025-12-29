@@ -13,7 +13,7 @@ interface OrderData {
   phone: string
   cpf: string
   total: number
-  items: Array<{ title: string; quantity: number; price: number }>
+  items: Array<{ title: string; quantity: number; price: number; numbers?: string }>
 }
 
 export default function PixEmailPage() {
@@ -38,13 +38,11 @@ export default function PixEmailPage() {
       }
 
       try {
-        // Validate token
         const validateResponse = await fetch("/api/validate-token", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ token }),
         })
-
         const validateData = await validateResponse.json()
 
         if (!validateData.success) {
@@ -55,54 +53,58 @@ export default function PixEmailPage() {
 
         setOrderData(validateData.orderData)
 
-        // Check if we should use existing PIX or generate new
+        let qrCodeText = ""
+        let qrTransactionId = ""
+        let qrUrl = ""
+
         if (!validateData.shouldRegeneratePix && validateData.existingPixData) {
-          setQrcode(validateData.existingPixData.qrcode)
+          qrCodeText = validateData.existingPixData.qrcode
+          qrTransactionId = validateData.existingPixData.transactionId || ""
           setTimeLeft(Math.floor(validateData.existingPixData.timeRemaining / 1000))
-          setIsLoading(false)
-          return
+        } else {
+          const paymentResponse = await fetch("/api/pagamento", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: validateData.orderData.name,
+              email: validateData.orderData.email,
+              phone: validateData.orderData.phone,
+              cpf: validateData.orderData.cpf,
+              amount: validateData.orderData.total * 100,
+              items: validateData.orderData.items,
+              source: "email",
+            }),
+          })
+
+          const paymentData = await paymentResponse.json()
+
+          if (!paymentData.success) {
+            setError(paymentData.error || "Erro ao gerar PIX")
+            setIsLoading(false)
+            return
+          }
+
+          qrCodeText = paymentData.transaction.qrcode
+          qrTransactionId = paymentData.transaction.id
+
+          await fetch("/api/validate-token", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              token,
+              pixData: {
+                qrcode: qrCodeText,
+                transactionId: qrTransactionId,
+              },
+            }),
+          })
         }
 
-        // Generate new PIX
-        const paymentResponse = await fetch("/api/pagamento", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: validateData.orderData.name,
-            email: validateData.orderData.email,
-            phone: validateData.orderData.phone,
-            cpf: validateData.orderData.cpf,
-            amount: validateData.orderData.total * 100,
-            items: validateData.orderData.items,
-            source: "email",
-          }),
-        })
+        qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrCodeText)}`
 
-        const paymentData = await paymentResponse.json()
-
-        if (!paymentData.success) {
-          setError(paymentData.error || "Erro ao gerar PIX")
-          setIsLoading(false)
-          return
-        }
-
-        setQrcode(paymentData.transaction.qrcode)
-        setQrcodeUrl(paymentData.transaction.qrcodeUrl)
-        setTransactionId(paymentData.transaction.id)
-
-        // Update token with new PIX data
-        await fetch("/api/validate-token", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            token,
-            pixData: {
-              qrcode: paymentData.transaction.qrcode,
-              transactionId: paymentData.transaction.id,
-            },
-          }),
-        })
-
+        setQrcode(qrCodeText)
+        setQrcodeUrl(qrUrl)
+        setTransactionId(qrTransactionId)
         setIsLoading(false)
       } catch (err) {
         setError("Erro ao processar solicitação")
@@ -117,7 +119,6 @@ export default function PixEmailPage() {
     const timer = setInterval(() => {
       setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0))
     }, 1000)
-
     return () => clearInterval(timer)
   }, [])
 
@@ -192,14 +193,11 @@ export default function PixEmailPage() {
     <SecurityLayer>
       <div className="min-h-screen flex flex-col bg-[#f5f7fa]">
         <HeaderSimple />
-
         <main className="flex-1 py-8 md:py-12">
           <div className="max-w-[1200px] mx-auto px-4 md:px-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-              {/* Left/Center - QR Code */}
               <div className="lg:col-span-2">
                 <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-                  {/* Header */}
                   <div className="bg-[#0066b3] text-white p-6 md:p-8 text-center">
                     <QrCode className="w-12 h-12 md:w-16 md:h-16 mx-auto mb-4" />
                     <h1
@@ -215,8 +213,6 @@ export default function PixEmailPage() {
                       Escaneie o QR Code ou copie o código
                     </p>
                   </div>
-
-                  {/* Timer */}
                   <div className="bg-[#fff8e6] border-b border-[#f0e6c8] px-6 py-4 flex items-center justify-center gap-3">
                     <Clock className="w-5 h-5 text-[#b38600]" />
                     <span
@@ -226,15 +222,12 @@ export default function PixEmailPage() {
                       Expira em: {formatTime(timeLeft)}
                     </span>
                   </div>
-
-                  {/* QR Code */}
                   <div className="p-6 md:p-10">
                     <div className="flex flex-col items-center">
-                      {/* QR Code Image */}
                       <div className="bg-white p-4 md:p-6 rounded-xl border-2 border-[#dee2e6] shadow-inner mb-6">
                         {qrcodeUrl ? (
                           <img
-                            src={qrcodeUrl || "/placeholder.svg"}
+                            src={qrcodeUrl}
                             alt="QR Code PIX"
                             className="w-[200px] h-[200px] md:w-[280px] md:h-[280px]"
                           />
@@ -244,8 +237,6 @@ export default function PixEmailPage() {
                           </div>
                         )}
                       </div>
-
-                      {/* Total */}
                       <div className="text-center mb-6">
                         <p
                           className="text-[16px] text-[#4c556c] mb-1"
@@ -260,8 +251,6 @@ export default function PixEmailPage() {
                           R$ {orderData?.total.toFixed(2).replace(".", ",") || "0,00"}
                         </p>
                       </div>
-
-                      {/* Copy Button */}
                       <button
                         onClick={copyToClipboard}
                         className="w-full max-w-[400px] bg-[#0066b3] text-white py-4 rounded-lg text-[16px] md:text-[18px] font-bold flex items-center justify-center gap-3 hover:bg-[#0055a0] transition-colors cursor-pointer"
@@ -279,8 +268,6 @@ export default function PixEmailPage() {
                           </>
                         )}
                       </button>
-
-                      {/* PIX Code Display */}
                       <div className="mt-6 w-full max-w-[400px]">
                         <p
                           className="text-[14px] text-[#4c556c] mb-2 text-center"
@@ -294,8 +281,6 @@ export default function PixEmailPage() {
                       </div>
                     </div>
                   </div>
-
-                  {/* Instructions */}
                   <div className="bg-[#f8f9fa] border-t border-[#dee2e6] p-6 md:p-8">
                     <h3
                       className="text-[18px] md:text-[20px] text-[#1f2a47] mb-4 font-bold"
@@ -353,7 +338,6 @@ export default function PixEmailPage() {
                 </div>
               </div>
 
-              {/* Right - Order Summary */}
               <div className="lg:col-span-1">
                 <div className="bg-white rounded-xl shadow-lg overflow-hidden sticky top-6">
                   <div className="bg-[#1f2a47] text-white p-5">
@@ -361,9 +345,7 @@ export default function PixEmailPage() {
                       Resumo do Pedido
                     </h2>
                   </div>
-
                   <div className="p-5">
-                    {/* Customer Info */}
                     {orderData?.name && (
                       <div className="mb-5 pb-5 border-b border-[#dee2e6]">
                         <p
@@ -388,8 +370,6 @@ export default function PixEmailPage() {
                         )}
                       </div>
                     )}
-
-                    {/* Items */}
                     <div className="mb-5 pb-5 border-b border-[#dee2e6]">
                       <p
                         className="text-[14px] text-[#4c556c] mb-3"
@@ -399,25 +379,28 @@ export default function PixEmailPage() {
                       </p>
                       <div className="space-y-3">
                         {orderData?.items.map((item, index) => (
-                          <div key={index} className="flex justify-between items-center gap-2">
-                            <span
-                              className="text-[14px] text-[#1f2a47] flex-1"
-                              style={{ fontFamily: "caixaStdRegular, sans-serif" }}
-                            >
-                              {item.quantity}x {item.title}
-                            </span>
-                            <span
-                              className="text-[14px] text-[#0066b3] font-bold flex-shrink-0"
-                              style={{ fontFamily: "caixaStdBold, sans-serif" }}
-                            >
-                              R$ {(item.price * item.quantity).toFixed(2).replace(".", ",")}
-                            </span>
+                          <div key={index} className="flex flex-col">
+                            <div className="flex justify-between items-center">
+                              <span
+                                className="text-[14px] text-[#1f2a47]"
+                                style={{ fontFamily: "caixaStdRegular, sans-serif" }}
+                              >
+                                {item.quantity}x {item.title}
+                              </span>
+                              <span
+                                className="text-[14px] text-[#0066b3] font-bold"
+                                style={{ fontFamily: "caixaStdBold, sans-serif" }}
+                              >
+                                R$ {(item.price * item.quantity).toFixed(2).replace(".", ",")}
+                              </span>
+                            </div>
+                            {item.numbers && (
+                              <span className="text-[12px] text-[#6b7280] mt-1">Números: {item.numbers}</span>
+                            )}
                           </div>
                         ))}
                       </div>
                     </div>
-
-                    {/* Total */}
                     <div className="flex justify-between items-center mb-6">
                       <span
                         className="text-[18px] text-[#1f2a47] font-bold"
@@ -432,8 +415,6 @@ export default function PixEmailPage() {
                         R$ {orderData?.total.toFixed(2).replace(".", ",") || "0,00"}
                       </span>
                     </div>
-
-                    {/* Security badges */}
                     <div className="space-y-3">
                       <div className="flex items-center gap-3 text-[#10b981]">
                         <ShieldCheck className="w-5 h-5 flex-shrink-0" />
@@ -449,8 +430,6 @@ export default function PixEmailPage() {
                       </div>
                     </div>
                   </div>
-
-                  {/* Transaction ID */}
                   {transactionId && (
                     <div className="bg-[#f8f9fa] border-t border-[#dee2e6] p-4">
                       <p
@@ -466,7 +445,6 @@ export default function PixEmailPage() {
             </div>
           </div>
         </main>
-
         <Footer />
       </div>
     </SecurityLayer>
