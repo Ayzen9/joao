@@ -369,7 +369,7 @@ export function CheckoutModal({ isOpen, onClose, total, items, onSuccess }: Chec
         <div className="fixed top-0 left-1/2 -translate-x-1/2 z-[70] pt-8 animate-notification-slide">
           <div className="bg-[#28a745] text-white px-16 py-8 rounded-2xl shadow-2xl flex items-center gap-5 min-w-[500px]">
             <CheckCircle className="w-14 h-14 text-white flex-shrink-0" />
-            <span className="text-[22px] font-bold" style={{ fontFamily: "caixaStdBold, sans-serif" }}>
+            <span className="text-[18px] font-bold" style={{ fontFamily: "caixaStdBold, sans-serif" }}>
               Te enviamos um Email com as informações do seu pedido
             </span>
           </div>

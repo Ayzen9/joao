@@ -1,679 +1,648 @@
 "use client"
-import { useState, useEffect } from "react"
+
+import { useState } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { X, Loader2, CheckCircle } from "lucide-react"
+import { CartProvider, useCart, type ComboCartItem } from "@/components/cart-context"
+import { Header } from "@/components/header"
+import { Footer } from "@/components/footer"
+import { ChevronUp } from "lucide-react"
+import { SecurityLayer } from "@/components/security-layer"
+import { CheckoutModal } from "@/components/checkout-modal"
 
-interface CheckoutModalProps {
-  isOpen: boolean
-  onClose: () => void
-  total: number
-  items: Array<{ title: string; quantity: number; price: number; numbers?: string }>
-  onSuccess?: () => void
+export default function CarrinhoPage() {
+  return (
+    <CartProvider>
+      <SecurityLayer>
+        <CarrinhoContent />
+      </SecurityLayer>
+    </CartProvider>
+  )
 }
 
-const SAVED_DATA_COOKIE = "loterias_user_data"
-const PIX_SESSION_COOKIE = "loterias_pix_session"
-
-function getSavedUserData() {
-  if (typeof window === "undefined") return null
-  try {
-    const stored = document.cookie.split("; ").find((row) => row.startsWith(SAVED_DATA_COOKIE + "="))
-    if (stored) {
-      const value = stored.split("=")[1]
-      const decoded = decodeURIComponent(value)
-      return JSON.parse(atob(decoded))
-    }
-  } catch {
-    // ignore
-  }
-  return null
+interface CartItem {
+  id: string
+  lottery: string
+  type: "bolao" | "aposta"
+  price: number
+  color: string
+  concurso: string
+  numbers?: number[]
+  bonus?: number[]
+  team?: string
+  quantity: number
 }
 
-function saveUserData(data: Record<string, string>) {
-  if (typeof window === "undefined") return
-  const encoded = btoa(JSON.stringify(data))
-  const maxAge = 60 * 60 * 24 * 365 // 1 ano
-  document.cookie = `${SAVED_DATA_COOKIE}=${encodeURIComponent(encoded)}; path=/; max-age=${maxAge}; SameSite=Lax`
-}
-
-function savePixSession(data: {
-  qrcode: string
-  qrcodeUrl: string
-  transactionId: string
-  total: number
-  items: Array<{ title: string; quantity: number; price: number; numbers?: string }>
-  customerName: string
-  email: string
-}) {
-  if (typeof window === "undefined") return
-  const encoded = btoa(JSON.stringify(data))
-  const maxAge = 60 * 60 // 1 hora
-  document.cookie = `${PIX_SESSION_COOKIE}=${encodeURIComponent(encoded)}; path=/; max-age=${maxAge}; SameSite=Lax`
-  console.log("[v0] Cookie PIX salvo com sucesso")
-}
-
-export function CheckoutModal({ isOpen, onClose, total, items, onSuccess }: CheckoutModalProps) {
+function CarrinhoContent() {
   const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
-  const [showNotification, setShowNotification] = useState(false)
-  const [saveData, setSaveData] = useState(false)
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    cpf: "",
-    cep: "",
-    endereco: "",
-    numero: "",
-    complemento: "",
-    bairro: "",
-    cidade: "",
-    estado: "",
-  })
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const [loadingCep, setLoadingCep] = useState(false)
+  const { cart, comboItems, removeItem, removeComboItem, clearAllItems, toggleComboNumbers, getTotal } = useCart()
+  const [expandedCombos, setExpandedCombos] = useState<Record<string, boolean>>({})
+  const [expandedNumbers, setExpandedNumbers] = useState<Record<string, boolean>>({})
+  const [showCheckout, setShowCheckout] = useState(false)
 
-  useEffect(() => {
-    if (isOpen) {
-      const savedData = getSavedUserData()
-      if (savedData) {
-        setFormData((prev) => ({ ...prev, ...savedData }))
-        setSaveData(true)
-      }
-    }
-  }, [isOpen])
-
-  useEffect(() => {
-    if (!isOpen) {
-      setErrors({})
-    }
-  }, [isOpen])
-
-  // Format CPF while typing
-  const formatCPF = (value: string) => {
-    const digits = value.replace(/\D/g, "").slice(0, 11)
-    if (digits.length <= 3) return digits
-    if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`
-    if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`
-    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`
+  const toggleExpandCombo = (comboId: string) => {
+    setExpandedCombos((prev) => ({
+      ...prev,
+      [comboId]: !prev[comboId],
+    }))
   }
 
-  // Validate CPF
-  const validateCPF = (cpf: string): boolean => {
-    const digits = cpf.replace(/\D/g, "")
-    if (digits.length !== 11) return false
-    if (/^(\d)\1+$/.test(digits)) return false
-
-    let sum = 0
-    for (let i = 0; i < 9; i++) {
-      sum += Number.parseInt(digits[i]) * (10 - i)
-    }
-    let remainder = (sum * 10) % 11
-    if (remainder === 10 || remainder === 11) remainder = 0
-    if (remainder !== Number.parseInt(digits[9])) return false
-
-    sum = 0
-    for (let i = 0; i < 10; i++) {
-      sum += Number.parseInt(digits[i]) * (11 - i)
-    }
-    remainder = (sum * 10) % 11
-    if (remainder === 10 || remainder === 11) remainder = 0
-    if (remainder !== Number.parseInt(digits[10])) return false
-
-    return true
+  const toggleExpandNumbers = (itemId: string) => {
+    setExpandedNumbers((prev) => ({
+      ...prev,
+      [itemId]: !prev[itemId],
+    }))
   }
 
-  // Format phone while typing
-  const formatPhone = (value: string) => {
-    const digits = value.replace(/\D/g, "").slice(0, 11)
-    if (digits.length <= 2) return digits
-    if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`
-    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`
-  }
+  const total = getTotal()
 
-  // Format CEP while typing
-  const formatCEP = (value: string) => {
-    const digits = value.replace(/\D/g, "").slice(0, 8)
-    if (digits.length <= 5) return digits
-    return `${digits.slice(0, 5)}-${digits.slice(5)}`
-  }
+  const cartItems = cart.items as CartItem[]
+  const bolaoItems = cartItems.filter((item) => item.type === "bolao")
+  const apostaItems = cartItems.filter((item) => item.type === "aposta")
 
-  // Fetch address from CEP
-  const fetchAddress = async (cep: string) => {
-    const digits = cep.replace(/\D/g, "")
-    if (digits.length !== 8) return
+  const hasItems = cartItems.length > 0 || comboItems.length > 0
 
-    setLoadingCep(true)
-    try {
-      const response = await fetch(`https://viacep.com.br/ws/${digits}/json/`)
-      const data = await response.json()
+  const getCheckoutItems = () => {
+    const items: Array<{ title: string; quantity: number; price: number; numbers?: string }> = []
 
-      if (!data.erro) {
-        setFormData((prev) => ({
-          ...prev,
-          endereco: data.logradouro || "",
-          bairro: data.bairro || "",
-          cidade: data.localidade || "",
-          estado: data.uf || "",
-        }))
-      }
-    } catch (error) {
-      // Silently fail
-    } finally {
-      setLoadingCep(false)
-    }
-  }
+    comboItems.forEach((combo) => {
+      const numbersStr = combo.games
+        .map((g) => {
+          if (g.numbers && g.numbers.length > 0) {
+            return g.numbers.map((nums) => `${g.lottery} (${nums.join(",")})`).join("; ")
+          }
+          return `${g.lottery} (${g.quantity}x)`
+        })
+        .join(" | ")
 
-  // Validate name (must have at least two words)
-  const validateName = (name: string): boolean => {
-    const words = name.trim().split(/\s+/)
-    return words.length >= 2 && words.every((word) => word.length >= 2)
-  }
-
-  // Validate email
-  const validateEmail = (email: string): boolean => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-  }
-
-  const handleInputChange = (field: string, value: string) => {
-    let formattedValue = value
-
-    if (field === "cpf") {
-      formattedValue = formatCPF(value)
-      if (formattedValue.replace(/\D/g, "").length === 11) {
-        if (!validateCPF(formattedValue)) {
-          setErrors((prev) => ({ ...prev, cpf: "CPF inválido" }))
-        } else {
-          setErrors((prev) => {
-            const { cpf, ...rest } = prev
-            return rest
-          })
-        }
-      }
-    } else if (field === "phone") {
-      formattedValue = formatPhone(value)
-    } else if (field === "cep") {
-      formattedValue = formatCEP(value)
-      if (formattedValue.replace(/\D/g, "").length === 8) {
-        fetchAddress(formattedValue)
-      }
-    }
-
-    setFormData((prev) => ({ ...prev, [field]: formattedValue }))
-  }
-
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {}
-
-    if (!validateName(formData.name)) {
-      newErrors.name = "Digite nome e sobrenome"
-    }
-    if (!validateEmail(formData.email)) {
-      newErrors.email = "Email inválido"
-    }
-    if (formData.phone.replace(/\D/g, "").length < 10) {
-      newErrors.phone = "Telefone inválido"
-    }
-    if (!validateCPF(formData.cpf)) {
-      newErrors.cpf = "CPF inválido"
-    }
-    if (formData.cep.replace(/\D/g, "").length !== 8) {
-      newErrors.cep = "CEP inválido"
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
-  const handleSubmit = async () => {
-    if (!validateForm()) return
-
-    setIsLoading(true)
-
-    if (saveData) {
-      saveUserData({
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        cpf: formData.cpf,
-        cep: formData.cep,
-        endereco: formData.endereco,
-        numero: formData.numero,
-        complemento: formData.complemento,
-        bairro: formData.bairro,
-        cidade: formData.cidade,
-        estado: formData.estado,
+      items.push({
+        title: `Combo ${combo.comboName}`,
+        quantity: 1,
+        price: combo.price,
+        numbers: numbersStr,
       })
-    }
+    })
 
-    try {
-      const phoneDigits = formData.phone.replace(/\D/g, "")
-
-      console.log("[v0] Iniciando geração de token...")
-
-      // Generate token
-      const tokenResponse = await fetch("/api/generate-pix-token", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          orderDetails: {
-            customerName: formData.name,
-            email: formData.email,
-            phone: phoneDigits,
-            cpf: formData.cpf,
-            total: total,
-            items: items,
-            address: {
-              cep: formData.cep,
-              endereco: formData.endereco,
-              numero: formData.numero,
-              complemento: formData.complemento,
-              bairro: formData.bairro,
-              cidade: formData.cidade,
-              estado: formData.estado,
-            },
-          },
-        }),
+    cartItems.forEach((item) => {
+      items.push({
+        title: `${item.lottery} - ${item.type === "bolao" ? "Bolão" : "Aposta Simples"}`,
+        quantity: item.quantity,
+        price: item.price,
+        numbers: item.numbers ? item.numbers.join(",") : undefined,
       })
+    })
 
-      const tokenData = await tokenResponse.json()
-      console.log("[v0] Token response:", tokenData)
-
-      if (!tokenData.success) {
-        throw new Error(tokenData.error || "Erro ao gerar token")
-      }
-
-      console.log("[v0] Criando pagamento PIX...")
-
-      // Create PIX payment
-      const paymentResponse = await fetch("/api/pagamento", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          phone: phoneDigits,
-          cpf: formData.cpf,
-          amount: total * 100,
-          items: items,
-          address: {
-            cep: formData.cep,
-            endereco: formData.endereco,
-            numero: formData.numero,
-            complemento: formData.complemento,
-            bairro: formData.bairro,
-            cidade: formData.cidade,
-            estado: formData.estado,
-          },
-        }),
-      })
-
-      const paymentData = await paymentResponse.json()
-      console.log("[v0] Payment response:", paymentData)
-
-      if (!paymentData.success) {
-        throw new Error(paymentData.error || "Erro ao processar pagamento")
-      }
-
-      console.log("[v0] Enviando email...")
-
-      // Send email
-      await fetch("/api/email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          to: formData.email,
-          subject: "Confirmação de Apostas - Loterias Online",
-          orderDetails: {
-            customerName: formData.name,
-            phone: phoneDigits,
-            cpf: formData.cpf,
-            total: total,
-            items: items,
-          },
-        }),
-      })
-
-      console.log("[v0] Salvando sessão PIX no cookie...")
-
-      savePixSession({
-        qrcode: paymentData.transaction.qrcode,
-        qrcodeUrl: paymentData.transaction.qrcodeUrl,
-        transactionId: paymentData.transaction.id,
-        total: total,
-        items: items,
-        customerName: formData.name,
-        email: formData.email,
-      })
-
-      // Show notification
-      setShowNotification(true)
-
-      setTimeout(() => {
-        setShowNotification(false)
-        console.log("[v0] Redirecionando para /pix...")
-        window.location.href = "/pix"
-      }, 5000)
-    } catch (error) {
-      console.log("[v0] Erro:", error)
-      setErrors({ submit: error instanceof Error ? error.message : "Erro ao processar pagamento. Tente novamente." })
-      setIsLoading(false)
-    }
+    return items
   }
 
-  if (!isOpen) return null
+  const handlePaymentSuccess = () => {
+    const items = getCheckoutItems()
+    const params = new URLSearchParams({
+      total: total.toString(),
+      items: encodeURIComponent(JSON.stringify(items)),
+    })
+
+    router.push(`/pix?${params.toString()}`)
+  }
 
   return (
-    <>
-      {showNotification && (
-        <div className="fixed top-0 left-1/2 -translate-x-1/2 z-[70] pt-8 animate-notification-slide">
-          <div className="bg-[#28a745] text-white px-16 py-8 rounded-2xl shadow-2xl flex items-center gap-5 min-w-[500px]">
-            <CheckCircle className="w-14 h-14 text-white flex-shrink-0" />
-            <span className="text-[22px] font-bold" style={{ fontFamily: "caixaStdBold, sans-serif" }}>
-              Te enviamos um Email com as informações do seu pedido
-            </span>
-          </div>
-        </div>
-      )}
+    <div className="min-h-screen flex flex-col bg-white">
+      <Header />
 
-      {/* Modal Overlay */}
-      <div
-        className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-fade-in"
-        onClick={onClose}
-      >
-        <div
-          className="bg-white rounded-xl w-full max-w-[600px] max-h-[90vh] overflow-y-auto shadow-2xl animate-scale-in"
-          onClick={(e) => e.stopPropagation()}
+      <main className="flex-1">
+        <section
+          className="relative overflow-hidden w-full"
+          style={{
+            backgroundImage: `url('https://www.loteriasonline.caixa.gov.br/silce-web/images/background/bg_institucionalInterno.jpg')`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            minHeight: "380px",
+          }}
         >
-          {/* Header */}
-          <div className="bg-[#0066b3] text-white p-6 flex items-center justify-between sticky top-0 z-10">
-            <h2 className="text-[24px] font-bold" style={{ fontFamily: "caixaStdBold, sans-serif" }}>
-              Finalizar Pagamento
-            </h2>
-            <button
-              onClick={onClose}
-              className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors cursor-pointer"
-            >
-              <X className="w-6 h-6" />
-            </button>
-          </div>
-
-          {/* Form */}
-          <div className="p-6 space-y-5">
-            {/* Total */}
-            <div className="bg-[#f0f7ff] border border-[#cce5ff] rounded-lg p-5 text-center">
-              <p className="text-[14px] text-[#0066b3] mb-1" style={{ fontFamily: "caixaStdRegular, sans-serif" }}>
-                Total a pagar
-              </p>
-              <p className="text-[36px] font-bold text-[#0066b3]" style={{ fontFamily: "caixaStdBold, sans-serif" }}>
-                R$ {total.toFixed(2).replace(".", ",")}
-              </p>
-            </div>
-
-            {/* Name */}
-            <div>
-              <label
-                className="block text-[16px] text-[#1f2a47] mb-2 font-bold"
-                style={{ fontFamily: "caixaStdBold, sans-serif" }}
-              >
-                Nome Completo
-              </label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => handleInputChange("name", e.target.value)}
-                placeholder="Ex: João Silva"
-                className={`w-full px-4 py-3 border-2 rounded-lg text-[16px] focus:outline-none focus:border-[#0066b3] transition-colors ${
-                  errors.name ? "border-red-500" : "border-[#dee2e6]"
-                }`}
-                style={{ fontFamily: "caixaStdRegular, sans-serif" }}
-              />
-              {errors.name && <p className="text-red-500 text-[14px] mt-1">{errors.name}</p>}
-            </div>
-
-            {/* Email */}
-            <div>
-              <label
-                className="block text-[16px] text-[#1f2a47] mb-2 font-bold"
-                style={{ fontFamily: "caixaStdBold, sans-serif" }}
-              >
-                Email
-              </label>
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleInputChange("email", e.target.value)}
-                placeholder="seu@email.com"
-                className={`w-full px-4 py-3 border-2 rounded-lg text-[16px] focus:outline-none focus:border-[#0066b3] transition-colors ${
-                  errors.email ? "border-red-500" : "border-[#dee2e6]"
-                }`}
-                style={{ fontFamily: "caixaStdRegular, sans-serif" }}
-              />
-              {errors.email && <p className="text-red-500 text-[14px] mt-1">{errors.email}</p>}
-            </div>
-
-            {/* Phone */}
-            <div>
-              <label
-                className="block text-[16px] text-[#1f2a47] mb-2 font-bold"
-                style={{ fontFamily: "caixaStdBold, sans-serif" }}
-              >
-                Telefone
-              </label>
-              <div className="flex">
-                <span className="bg-[#f0f7ff] border-2 border-r-0 border-[#dee2e6] px-4 py-3 rounded-l-lg text-[16px] text-[#0066b3] font-bold">
-                  +55
-                </span>
-                <input
-                  type="tel"
-                  value={formData.phone}
-                  onChange={(e) => handleInputChange("phone", e.target.value)}
-                  placeholder="(11) 99999-9999"
-                  className={`flex-1 px-4 py-3 border-2 rounded-r-lg text-[16px] focus:outline-none focus:border-[#0066b3] transition-colors ${
-                    errors.phone ? "border-red-500" : "border-[#dee2e6]"
-                  }`}
-                  style={{ fontFamily: "caixaStdRegular, sans-serif" }}
+          <div className="max-w-[1900px] mx-auto px-6 py-12 relative z-10">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+              <div className="flex-1 text-white text-left">
+                <h1
+                  className="text-[55px] font-bold mb-5 leading-tight"
+                  style={{
+                    fontFamily: "caixaStdBold, sans-serif",
+                    fontWeight: 800,
+                    color: "#fff",
+                    letterSpacing: "-1.800px",
+                  }}
+                >
+                  Carrinho de Apostas
+                </h1>
+                <p
+                  className="text-[20px] whitespace-nowrap"
+                  style={{
+                    fontFamily: "caixaStdBook, sans-serif",
+                    color: "#fff",
+                  }}
+                >
+                  No carrinho estão todas as apostas que você selecionou. Basta seguir os passos para finalizar e depois
+                  é só torcer.
+                </p>
+              </div>
+              <div className="flex-shrink-0 self-end">
+                <img
+                  src="https://www.loteriasonline.caixa.gov.br/silce-web/images/illustrations/home-com-sorte.png"
+                  alt="Loterias Online - Volantes"
+                  className="max-w-[400px] md:max-w-[480px] w-full h-auto translate-y-[48px]"
                 />
               </div>
-              {errors.phone && <p className="text-red-500 text-[14px] mt-1">{errors.phone}</p>}
             </div>
+          </div>
+        </section>
 
-            {/* CPF */}
-            <div>
-              <label
-                className="block text-[16px] text-[#1f2a47] mb-2 font-bold"
+        <section className="py-12 bg-white">
+          <div className="max-w-[1200px] mx-auto px-6">
+            <div className="flex flex-col md:flex-row items-center justify-between mb-10 gap-4">
+              <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+                <Link
+                  href="/"
+                  className="border border-[#45c0ae] text-[#4c546d] px-10 py-4 rounded font-bold text-[16px] hover:bg-[#45c0ae] hover:text-white transition-colors text-center cursor-pointer"
+                  style={{ fontFamily: "caixaStdBold, sans-serif" }}
+                >
+                  Continuar apostando
+                </Link>
+                <button
+                  onClick={clearAllItems}
+                  className="border border-[#45c0ae] text-[#4c546d] px-10 py-4 rounded font-bold text-[16px] hover:bg-[#45c0ae] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-center cursor-pointer"
+                  style={{ fontFamily: "caixaStdBold, sans-serif" }}
+                  disabled={!hasItems}
+                >
+                  Limpar carrinho
+                </button>
+              </div>
+              <button
+                onClick={() => setShowCheckout(true)}
+                className="bg-[#0066b3] text-white px-14 py-5 rounded font-bold text-[18px] flex items-center justify-center gap-3 hover:bg-[#0055a0] transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto cursor-pointer"
                 style={{ fontFamily: "caixaStdBold, sans-serif" }}
+                disabled={!hasItems}
               >
-                CPF
-              </label>
-              <input
-                type="text"
-                value={formData.cpf}
-                onChange={(e) => handleInputChange("cpf", e.target.value)}
-                placeholder="000.000.000-00"
-                className={`w-full px-4 py-3 border-2 rounded-lg text-[16px] focus:outline-none focus:border-[#0066b3] transition-colors ${
-                  errors.cpf ? "border-red-500" : "border-[#dee2e6]"
-                }`}
-                style={{ fontFamily: "caixaStdRegular, sans-serif" }}
-              />
-              {errors.cpf && <p className="text-red-500 text-[14px] mt-1">{errors.cpf}</p>}
-            </div>
-
-            {/* CEP */}
-            <div>
-              <label
-                className="block text-[16px] text-[#1f2a47] mb-2 font-bold"
-                style={{ fontFamily: "caixaStdBold, sans-serif" }}
-              >
-                CEP
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={formData.cep}
-                  onChange={(e) => handleInputChange("cep", e.target.value)}
-                  placeholder="00000-000"
-                  className={`w-full px-4 py-3 border-2 rounded-lg text-[16px] focus:outline-none focus:border-[#0066b3] transition-colors ${
-                    errors.cep ? "border-red-500" : "border-[#dee2e6]"
-                  }`}
-                  style={{ fontFamily: "caixaStdRegular, sans-serif" }}
+                <img
+                  src="https://www.loteriasonline.caixa.gov.br/silce-web/images/icons/icon_concluirCompra.png"
+                  alt="Concluir"
+                  className="w-7 h-7 pointer-events-none"
                 />
-                {loadingCep && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    <Loader2 className="w-5 h-5 animate-spin text-[#0066b3]" />
+                Ir para pagamento
+              </button>
+            </div>
+
+            {hasItems ? (
+              <div className="space-y-14">
+                {comboItems.length > 0 && (
+                  <div>
+                    <h2
+                      className="text-[55px] text-[#0066b3] mb-8"
+                      style={{ fontFamily: "caixaStdBold, sans-serif", fontWeight: 700, letterSpacing: "-.035em" }}
+                    >
+                      Combos de Aposta
+                    </h2>
+                    <div className="bg-white overflow-hidden border border-[#ddd]">
+                      <div className="overflow-x-auto">
+                        <table className="w-full min-w-[800px] border-collapse">
+                          <thead>
+                            <tr className="bg-white border-b border-[#ddd]">
+                              <th
+                                className="py-4 px-8 text-center text-[16px] font-normal text-[#4c556c] border border-[#ddd]"
+                                style={{ fontFamily: "caixaStdRegular, sans-serif", minWidth: "100px" }}
+                              >
+                                Combo
+                              </th>
+                              <th
+                                className="py-4 px-8 text-center text-[16px] font-normal text-[#4c556c] border border-[#ddd]"
+                                style={{ fontFamily: "caixaStdRegular, sans-serif", minWidth: "100px" }}
+                              >
+                                Qtd. apostas
+                              </th>
+                              <th
+                                className="py-4 px-8 text-center text-[16px] font-normal text-[#4c556c] border border-[#ddd]"
+                                style={{ fontFamily: "caixaStdRegular, sans-serif", minWidth: "100px" }}
+                              >
+                                Detalhar apostas
+                              </th>
+                              <th
+                                className="py-4 px-8 text-center text-[16px] font-normal text-[#4c556c] border border-[#ddd]"
+                                style={{ fontFamily: "caixaStdRegular, sans-serif", minWidth: "100px" }}
+                              >
+                                Valor do Combo
+                              </th>
+                              <th
+                                className="py-4 px-8 text-center text-[16px] font-normal text-[#4c556c] border border-[#ddd]"
+                                style={{ fontFamily: "caixaStdRegular, sans-serif", minWidth: "100px" }}
+                              >
+                                Excluir
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {comboItems.map((combo) => (
+                              <ComboRow
+                                key={combo.id}
+                                combo={combo}
+                                isExpanded={expandedCombos[combo.id] || false}
+                                onToggleExpand={() => toggleExpandCombo(combo.id)}
+                                onToggleNumbers={() => toggleComboNumbers(combo.id)}
+                                onRemove={() => removeComboItem(combo.id)}
+                              />
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
                   </div>
                 )}
-              </div>
-              {errors.cep && <p className="text-red-500 text-[14px] mt-1">{errors.cep}</p>}
-            </div>
 
-            {/* Address fields (auto-filled) */}
-            {formData.endereco && (
-              <div className="space-y-4 animate-fade-in">
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="col-span-2">
-                    <label
-                      className="block text-[14px] text-[#4c556c] mb-1"
-                      style={{ fontFamily: "caixaStdRegular, sans-serif" }}
-                    >
-                      Endereço
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.endereco}
-                      readOnly
-                      className="w-full px-3 py-2 border border-[#dee2e6] rounded bg-[#f8f9fa] text-[14px]"
-                    />
+                {(bolaoItems.length > 0 || apostaItems.length > 0) && (
+                  <div className="space-y-14">
+                    {bolaoItems.length > 0 && (
+                      <div>
+                        <h2
+                          className="text-[55px] text-[#0066b3] mb-8"
+                          style={{ fontFamily: "caixaStdBold, sans-serif", fontWeight: 700, letterSpacing: "-.035em" }}
+                        >
+                          Bolão
+                        </h2>
+                        <CartTable
+                          items={bolaoItems}
+                          onRemove={removeItem}
+                          type="bolao"
+                          expandedNumbers={expandedNumbers}
+                          onToggleNumbers={toggleExpandNumbers}
+                        />
+                      </div>
+                    )}
+                    {apostaItems.length > 0 && (
+                      <div>
+                        <h2
+                          className="text-[55px] text-[#0066b3] mb-8"
+                          style={{ fontFamily: "caixaStdBold, sans-serif", fontWeight: 700, letterSpacing: "-.035em" }}
+                        >
+                          Aposta Simples
+                        </h2>
+                        <CartTable
+                          items={apostaItems}
+                          onRemove={removeItem}
+                          type="aposta"
+                          expandedNumbers={expandedNumbers}
+                          onToggleNumbers={toggleExpandNumbers}
+                        />
+                      </div>
+                    )}
                   </div>
-                  <div>
-                    <label
-                      className="block text-[14px] text-[#4c556c] mb-1"
-                      style={{ fontFamily: "caixaStdRegular, sans-serif" }}
+                )}
+
+                <div className="flex flex-col md:flex-row items-center justify-between gap-6 py-10">
+                  <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+                    <Link
+                      href="/"
+                      className="border border-[#45c0ae] text-[#4c546d] px-10 py-4 rounded font-bold text-[16px] hover:bg-[#45c0ae] hover:text-white transition-colors text-center cursor-pointer"
+                      style={{ fontFamily: "caixaStdBold, sans-serif" }}
                     >
-                      Número
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.numero}
-                      onChange={(e) => setFormData((prev) => ({ ...prev, numero: e.target.value }))}
-                      placeholder="Nº"
-                      className="w-full px-3 py-2 border border-[#dee2e6] rounded text-[14px] focus:outline-none focus:border-[#0066b3]"
-                    />
+                      Continuar apostando
+                    </Link>
+                    <button
+                      onClick={clearAllItems}
+                      className="border border-[#45c0ae] text-[#4c546d] px-10 py-4 rounded font-bold text-[16px] hover:bg-[#45c0ae] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-center cursor-pointer"
+                      style={{ fontFamily: "caixaStdBold, sans-serif" }}
+                    >
+                      Limpar carrinho
+                    </button>
                   </div>
+                  <button
+                    onClick={() => setShowCheckout(true)}
+                    className="bg-[#0066b3] text-white px-14 py-5 rounded font-bold text-[18px] flex items-center justify-center gap-3 hover:bg-[#0055a0] transition-colors w-full md:w-auto cursor-pointer"
+                    style={{ fontFamily: "caixaStdBold, sans-serif" }}
+                  >
+                    <img
+                      src="https://www.loteriasonline.caixa.gov.br/silce-web/images/icons/icon_concluirCompra.png"
+                      alt="Concluir"
+                      className="w-7 h-7 pointer-events-none"
+                    />
+                    Ir para pagamento
+                  </button>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label
-                      className="block text-[14px] text-[#4c556c] mb-1"
-                      style={{ fontFamily: "caixaStdRegular, sans-serif" }}
-                    >
-                      Bairro
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.bairro}
-                      readOnly
-                      className="w-full px-3 py-2 border border-[#dee2e6] rounded bg-[#f8f9fa] text-[14px]"
-                    />
-                  </div>
-                  <div>
-                    <label
-                      className="block text-[14px] text-[#4c556c] mb-1"
-                      style={{ fontFamily: "caixaStdRegular, sans-serif" }}
-                    >
-                      Complemento
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.complemento}
-                      onChange={(e) => setFormData((prev) => ({ ...prev, complemento: e.target.value }))}
-                      placeholder="Opcional"
-                      className="w-full px-3 py-2 border border-[#dee2e6] rounded text-[14px] focus:outline-none focus:border-[#0066b3]"
-                    />
-                  </div>
+
+                <div className="bg-[#d0e0e3] py-8 px-10 flex justify-end items-center rounded">
+                  <span
+                    className="text-[20px] text-[#4c556c] mr-4"
+                    style={{ fontFamily: "caixaStdRegular, sans-serif" }}
+                  >
+                    Total das apostas:
+                  </span>
+                  <span
+                    className="text-[36px] font-bold text-[#1f2a47]"
+                    style={{ fontFamily: "caixaStdBold, sans-serif" }}
+                  >
+                    R$ {total.toFixed(2).replace(".", ",")}
+                  </span>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label
-                      className="block text-[14px] text-[#4c556c] mb-1"
-                      style={{ fontFamily: "caixaStdRegular, sans-serif" }}
-                    >
-                      Cidade
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.cidade}
-                      readOnly
-                      className="w-full px-3 py-2 border border-[#dee2e6] rounded bg-[#f8f9fa] text-[14px]"
-                    />
-                  </div>
-                  <div>
-                    <label
-                      className="block text-[14px] text-[#4c556c] mb-1"
-                      style={{ fontFamily: "caixaStdRegular, sans-serif" }}
-                    >
-                      Estado
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.estado}
-                      readOnly
-                      className="w-full px-3 py-2 border border-[#dee2e6] rounded bg-[#f8f9fa] text-[14px]"
-                    />
-                  </div>
-                </div>
+              </div>
+            ) : (
+              <div className="bg-white rounded-xl p-16 text-center shadow-lg max-w-2xl mx-auto">
+                <p className="text-[26px] text-[#4c556c] mb-8" style={{ fontFamily: "caixaStdRegular, sans-serif" }}>
+                  Seu carrinho está vazio.
+                </p>
+                <Link
+                  href="/"
+                  className="inline-block bg-[#0066b3] text-white px-14 py-5 rounded font-bold text-[20px] hover:bg-[#0055a0] transition-colors cursor-pointer"
+                  style={{ fontFamily: "caixaStdBold, sans-serif" }}
+                >
+                  Começar a apostar
+                </Link>
               </div>
             )}
 
-            <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                id="saveData"
-                checked={saveData}
-                onChange={(e) => setSaveData(e.target.checked)}
-                className="w-5 h-5 rounded border-[#dee2e6] text-[#0066b3] focus:ring-[#0066b3] cursor-pointer"
-              />
-              <label
-                htmlFor="saveData"
-                className="text-[14px] text-[#4c556c] cursor-pointer"
-                style={{ fontFamily: "caixaStdRegular, sans-serif" }}
+            <div className="mt-16 bg-white rounded p-12 shadow">
+              <p
+                className="text-[18px] text-[#4c556c] mb-6"
+                style={{ fontFamily: "caixaStdRegular, sans-serif", lineHeight: "1.5" }}
               >
-                Salvar meus dados para futuras compras
-              </label>
+                Colocar itens no carrinho é um passo essencial para você concluir a sua compra.
+              </p>
+              <h2
+                className="text-[32px] text-[#1f2a47] mb-6"
+                style={{ fontFamily: "caixaStdBold, sans-serif", letterSpacing: "-.035em" }}
+              >
+                Como funciona
+              </h2>
+              <p
+                className="text-[16px] text-[#4c556c] mb-5"
+                style={{ fontFamily: "caixaStdRegular, sans-serif", lineHeight: "1.5" }}
+              >
+                Confira se as suas apostas estão corretas: fique atento às quantidades, valores, Teimosinhas e
+                Surpresinhas. Confira também os números que serão apostados.
+              </p>
+              <p
+                className="text-[16px] text-[#4c556c] mb-5"
+                style={{ fontFamily: "caixaStdRegular, sans-serif", lineHeight: "1.5" }}
+              >
+                Se algo estiver errado, clique no X no canto direito da aposta para que ela seja excluída do carrinho.
+                Para corrigir, volte ao jogo e aposte novamente.
+              </p>
+              <p
+                className="text-[16px] text-[#4c556c]"
+                style={{ fontFamily: "caixaStdRegular, sans-serif", lineHeight: "1.5" }}
+              >
+                Quando todas as apostas estiverem corretas, clique no botão "Concluir Apostas". Você será redirecionado
+                para o ambiente de pagamento.
+              </p>
             </div>
-
-            {/* Error message */}
-            {errors.submit && (
-              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-[14px]">
-                {errors.submit}
-              </div>
-            )}
-
-            {/* Submit button */}
-            <button
-              onClick={handleSubmit}
-              disabled={isLoading}
-              className="w-full bg-[#0066b3] text-white py-4 rounded-lg text-[18px] font-bold flex items-center justify-center gap-3 hover:bg-[#0055a0] transition-colors disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
-              style={{ fontFamily: "caixaStdBold, sans-serif" }}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-6 h-6 animate-spin" />
-                  Processando...
-                </>
-              ) : (
-                <>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="3" y="3" width="18" height="18" rx="2" />
-                    <path d="M9 9h6v6H9z" />
-                  </svg>
-                  Gerar QR Code PIX
-                </>
-              )}
-            </button>
           </div>
-        </div>
+        </section>
+      </main>
+
+      <Footer />
+
+      <CheckoutModal
+        isOpen={showCheckout}
+        onClose={() => setShowCheckout(false)}
+        total={total}
+        items={getCheckoutItems()}
+        onSuccess={handlePaymentSuccess}
+      />
+    </div>
+  )
+}
+
+function CartTable({
+  items,
+  onRemove,
+  type,
+  expandedNumbers,
+  onToggleNumbers,
+}: {
+  items: CartItem[]
+  onRemove: (id: string) => void
+  type: "bolao" | "aposta"
+  expandedNumbers: Record<string, boolean>
+  onToggleNumbers: (id: string) => void
+}) {
+  const MAX_VISIBLE_NUMBERS = 8
+
+  return (
+    <div className="bg-white overflow-hidden border border-[#ddd]">
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[800px] border-collapse">
+          <thead>
+            <tr className="bg-white border-b border-[#ddd]">
+              <th
+                className="py-4 px-8 text-left text-[16px] font-normal text-[#4c556c] border border-[#ddd]"
+                style={{ fontFamily: "caixaStdRegular, sans-serif", minWidth: "100px" }}
+              >
+                Jogo
+              </th>
+              <th
+                className="py-4 px-8 text-center text-[16px] font-normal text-[#4c556c] border border-[#ddd]"
+                style={{ fontFamily: "caixaStdRegular, sans-serif", minWidth: "100px" }}
+              >
+                Números
+              </th>
+              <th
+                className="py-4 px-8 text-center text-[16px] font-normal text-[#4c556c] border border-[#ddd]"
+                style={{ fontFamily: "caixaStdRegular, sans-serif", minWidth: "100px" }}
+              >
+                Mês
+              </th>
+              <th
+                className="py-4 px-8 text-center text-[16px] font-normal text-[#4c556c] border border-[#ddd]"
+                style={{ fontFamily: "caixaStdRegular, sans-serif", minWidth: "100px" }}
+              >
+                Valor
+              </th>
+              <th
+                className="py-4 px-8 text-center text-[16px] font-normal text-[#4c556c] border border-[#ddd]"
+                style={{ fontFamily: "caixaStdRegular, sans-serif", minWidth: "100px" }}
+              >
+                Excluir
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item) => {
+              const isExpanded = expandedNumbers[item.id] || false
+              const hasMoreNumbers = item.numbers && item.numbers.length > MAX_VISIBLE_NUMBERS
+              const visibleNumbers = isExpanded ? item.numbers : item.numbers?.slice(0, MAX_VISIBLE_NUMBERS)
+              const remainingCount = item.numbers ? item.numbers.length - MAX_VISIBLE_NUMBERS : 0
+              return (
+                <tr key={item.id} className="border-b border-[#ddd] last:border-b-0">
+                  <td className="py-4 px-8 border border-[#ddd]">
+                    <div className="flex items-center gap-4">
+                      <div className="w-4 h-4 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
+                      <span
+                        className="text-[21px] font-bold text-[#1f2a47]"
+                        style={{ fontFamily: "caixaStdBold, sans-serif" }}
+                      >
+                        {item.lottery}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="py-4 px-8 text-center border border-[#ddd]">
+                    <div className="flex flex-wrap justify-center gap-2 items-center">
+                      {visibleNumbers?.map((num, idx) => (
+                        <span
+                          key={idx}
+                          className="w-9 h-9 rounded-full flex items-center justify-center text-[14px] font-bold text-white"
+                          style={{ backgroundColor: item.color, fontFamily: "caixaStdBold, sans-serif" }}
+                        >
+                          {String(num).padStart(2, "0")}
+                        </span>
+                      ))}
+                      {hasMoreNumbers && !isExpanded && (
+                        <button
+                          onClick={() => onToggleNumbers(item.id)}
+                          className="w-9 h-9 rounded-full flex items-center justify-center text-[12px] font-bold text-white cursor-pointer hover:opacity-80 transition-opacity"
+                          style={{ backgroundColor: item.color, fontFamily: "caixaStdBold, sans-serif" }}
+                        >
+                          +{remainingCount}
+                        </button>
+                      )}
+                      {isExpanded && hasMoreNumbers && (
+                        <button
+                          onClick={() => onToggleNumbers(item.id)}
+                          className="w-9 h-9 rounded-full flex items-center justify-center text-white cursor-pointer hover:opacity-80 transition-opacity bg-gray-400"
+                        >
+                          <ChevronUp className="w-5 h-5" />
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                  <td
+                    className="py-4 px-8 text-center text-[21px] text-[#1f2a47] border border-[#ddd]"
+                    style={{ fontFamily: "caixaStdBold, sans-serif" }}
+                  >
+                    -
+                  </td>
+                  <td
+                    className="py-4 px-8 text-center text-[21px] text-[#0066b3] border border-[#ddd]"
+                    style={{ fontFamily: "caixaStdBold, sans-serif" }}
+                  >
+                    R${item.price.toFixed(2).replace(".", ",")}
+                  </td>
+                  <td className="py-4 px-8 text-center border border-[#ddd]">
+                    <button
+                      onClick={() => onRemove(item.id)}
+                      className="text-red-500 hover:text-red-700 transition-colors cursor-pointer"
+                    >
+                      <img
+                        src="/images/red.svg"
+                        alt="Excluir"
+                        className="w-7 h-7 mx-auto pointer-events-none"
+                      />
+                    </button>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
       </div>
+    </div>
+  )
+}
+
+function ComboRow({
+  combo,
+  isExpanded,
+  onToggleExpand,
+  onToggleNumbers,
+  onRemove,
+}: {
+  combo: ComboCartItem
+  isExpanded: boolean
+  onToggleExpand: () => void
+  onToggleNumbers: () => void
+  onRemove: () => void
+}) {
+  return (
+    <>
+      <tr className="border-b border-[#ddd]">
+        <td
+          className="py-4 px-8 text-center text-[21px] font-bold text-[#1f2a47] border border-[#ddd]"
+          style={{ fontFamily: "caixaStdBold, sans-serif" }}
+        >
+          {combo.comboName}
+        </td>
+        <td
+          className="py-4 px-8 text-center text-[21px] text-[#1f2a47] border border-[#ddd]"
+          style={{ fontFamily: "caixaStdBold, sans-serif" }}
+        >
+          {combo.totalGames}
+        </td>
+        <td className="py-4 px-8 text-center border border-[#ddd]">
+          <button
+            onClick={onToggleExpand}
+            className="inline-flex items-center justify-center w-12 h-12 hover:bg-[#f0f0f0] transition-colors rounded cursor-pointer"
+          >
+            <img
+              src="https://www.loteriasonline.caixa.gov.br/silce-web/images/icons/trevo_lupa.png"
+              alt="Detalhar"
+              className="w-8 h-8 pointer-events-none"
+            />
+          </button>
+        </td>
+        <td
+          className="py-4 px-8 text-center text-[21px] text-[#0066b3] border border-[#ddd]"
+          style={{ fontFamily: "caixaStdBold, sans-serif" }}
+        >
+          R${combo.price.toFixed(2).replace(".", ",")}
+        </td>
+        <td className="py-4 px-8 text-center border border-[#ddd]">
+          <button onClick={onRemove} className="text-red-500 hover:text-red-700 transition-colors cursor-pointer">
+            <img
+              src="/images/red.svg"
+              alt="Excluir"
+              className="w-7 h-7 mx-auto pointer-events-none"
+            />
+          </button>
+        </td>
+      </tr>
+      {isExpanded && (
+        <tr className="bg-[#f8f9fa]">
+          <td colSpan={5} className="p-6 border border-[#ddd]">
+            <div className="space-y-4">
+              {combo.games.map((game, idx) => (
+                <div key={idx} className="bg-white rounded-lg p-4 shadow-sm">
+                  <div className="flex items-center gap-3 mb-3">
+                    <span
+                      className="text-[18px] font-bold text-[#1f2a47]"
+                      style={{ fontFamily: "caixaStdBold, sans-serif" }}
+                    >
+                      {game.lottery}
+                    </span>
+                    <span className="text-[14px] text-[#4c556c]">({game.quantity} apostas)</span>
+                  </div>
+                  {game.numbers && game.numbers.length > 0 && (
+                    <div className="space-y-2">
+                      {game.numbers.map((nums, numIdx) => (
+                        <div key={numIdx} className="flex flex-wrap gap-2">
+                          {nums.map((num, nIdx) => (
+                            <span
+                              key={nIdx}
+                              className="w-8 h-8 rounded-full bg-[#0066b3] text-white flex items-center justify-center text-[13px] font-bold"
+                            >
+                              {String(num).padStart(2, "0")}
+                            </span>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={onToggleExpand}
+              className="mt-4 flex items-center gap-2 text-[#0066b3] hover:underline cursor-pointer"
+            >
+              <ChevronUp className="w-5 h-5" />
+              Fechar detalhes
+            </button>
+          </td>
+        </tr>
+      )}
     </>
   )
 }
