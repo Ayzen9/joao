@@ -16,7 +16,7 @@ export interface Cart {
 }
 
 const CART_COOKIE_NAME = "loterias_cart"
-const CART_SECRET = process.env.CART_SECRET || "default_secret_key_change_in_production"
+const CART_SECRET = process.env.CART_SECRET
 
 function encodeCart(cart: Cart): string {
   const data = JSON.stringify(cart)
