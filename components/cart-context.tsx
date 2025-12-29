@@ -21,6 +21,8 @@ export interface ComboCartItem {
     lottery: string
     quantity: number
     numbers?: number[][]
+    color: string
+    concurso: string
   }[]
   showNumbers: boolean
   totalGames: number
@@ -34,13 +36,7 @@ interface CartContextType {
   openCart: () => void
   closeCart: () => void
 
-  addItem: (
-    name: string,
-    type: "bolao" | "aposta",
-    price: number,
-    color: string,
-    concurso: string
-  ) => void
+  addItem: (name: string, type: "bolao" | "aposta", price: number, color: string, concurso: string) => void
 
   addItemWithNumbers: (
     name: string,
@@ -50,7 +46,7 @@ interface CartContextType {
     concurso: string,
     numbers: number[],
     bonus?: number[],
-    team?: string
+    team?: string,
   ) => void
 
   addComboToCart: (combo: ComboData, showNumbers: boolean) => void
@@ -77,9 +73,7 @@ function getCombosFromStorage(): ComboCartItem[] {
   if (typeof window === "undefined") return []
 
   try {
-    const cookie = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith(`${COMBO_STORAGE_KEY}=`))
+    const cookie = document.cookie.split("; ").find((row) => row.startsWith(`${COMBO_STORAGE_KEY}=`))
 
     if (!cookie) return []
 
@@ -118,13 +112,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const closeCart = () => setIsOpen(false)
 
   // Operações com itens normais
-  const addItem = (
-    name: string,
-    type: "bolao" | "aposta",
-    price: number,
-    color: string,
-    concurso: string
-  ) => {
+  const addItem = (name: string, type: "bolao" | "aposta", price: number, color: string, concurso: string) => {
     const updated = addToCartStorage(name, type, price, color, concurso)
     setCart(updated)
     setIsOpen(true)
@@ -138,7 +126,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     concurso: string,
     numbers: number[],
     bonus?: number[],
-    team?: string
+    team?: string,
   ) => {
     const updated = addToCartWithNumbersStorage(name, type, price, color, concurso, numbers, bonus, team)
     setCart(updated)
@@ -164,6 +152,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         lottery: g.lottery,
         quantity: g.quantity,
         numbers: g.numbers,
+        color: g.color,
+        concurso: g.concurso,
       })),
       showNumbers,
       totalGames: combo.games.reduce((sum, g) => sum + g.quantity, 0),
@@ -182,9 +172,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }
 
   const toggleComboNumbers = (comboId: string) => {
-    const updated = comboItems.map((c) =>
-      c.id === comboId ? { ...c, showNumbers: !c.showNumbers } : c
-    )
+    const updated = comboItems.map((c) => (c.id === comboId ? { ...c, showNumbers: !c.showNumbers } : c))
     setComboItems(updated)
     saveCombosToStorage(updated)
   }

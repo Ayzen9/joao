@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Copy, Check, QrCode, Clock, ShieldCheck, Smartphone, Loader2 } from "lucide-react"
-import { Header } from "@/components/header"
+import { HeaderSimple } from "@/components/header-simple"
 import { Footer } from "@/components/footer"
 import { SecurityLayer } from "@/components/security-layer"
 
@@ -139,7 +139,7 @@ export default function PixEmailPage() {
     return (
       <SecurityLayer>
         <div className="min-h-screen flex flex-col bg-[#f5f7fa]">
-          <Header />
+          <HeaderSimple />
           <main className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <Loader2 className="w-16 h-16 animate-spin text-[#0066b3] mx-auto mb-4" />
@@ -158,11 +158,11 @@ export default function PixEmailPage() {
     return (
       <SecurityLayer>
         <div className="min-h-screen flex flex-col bg-[#f5f7fa]">
-          <Header />
+          <HeaderSimple />
           <main className="flex-1 flex items-center justify-center px-4">
             <div className="bg-white rounded-xl shadow-lg p-8 max-w-md text-center">
               <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
-                <span className="text-[32px]">❌</span>
+                <span className="text-[32px]">X</span>
               </div>
               <h2
                 className="text-[24px] text-[#1f2a47] font-bold mb-2"
@@ -191,7 +191,7 @@ export default function PixEmailPage() {
   return (
     <SecurityLayer>
       <div className="min-h-screen flex flex-col bg-[#f5f7fa]">
-        <Header />
+        <HeaderSimple />
 
         <main className="flex-1 py-8 md:py-12">
           <div className="max-w-[1200px] mx-auto px-4 md:px-6">
@@ -254,7 +254,7 @@ export default function PixEmailPage() {
                           Valor a pagar
                         </p>
                         <p
-                          className="text-[42px] md:text-[52px] font-bold text-[#0066b3]"
+                          className="text-[32px] md:text-[52px] font-bold text-[#0066b3]"
                           style={{ fontFamily: "caixaStdBold, sans-serif" }}
                         >
                           R$ {orderData?.total.toFixed(2).replace(".", ",") || "0,00"}
@@ -264,7 +264,7 @@ export default function PixEmailPage() {
                       {/* Copy Button */}
                       <button
                         onClick={copyToClipboard}
-                        className="w-full max-w-[400px] bg-[#0066b3] text-white py-4 rounded-lg text-[18px] font-bold flex items-center justify-center gap-3 hover:bg-[#0055a0] transition-colors cursor-pointer"
+                        className="w-full max-w-[400px] bg-[#0066b3] text-white py-4 rounded-lg text-[16px] md:text-[18px] font-bold flex items-center justify-center gap-3 hover:bg-[#0055a0] transition-colors cursor-pointer"
                         style={{ fontFamily: "caixaStdBold, sans-serif" }}
                       >
                         {copied ? (
@@ -298,7 +298,7 @@ export default function PixEmailPage() {
                   {/* Instructions */}
                   <div className="bg-[#f8f9fa] border-t border-[#dee2e6] p-6 md:p-8">
                     <h3
-                      className="text-[20px] text-[#1f2a47] mb-4 font-bold"
+                      className="text-[18px] md:text-[20px] text-[#1f2a47] mb-4 font-bold"
                       style={{ fontFamily: "caixaStdBold, sans-serif" }}
                     >
                       Como pagar com PIX
@@ -308,7 +308,10 @@ export default function PixEmailPage() {
                         <div className="w-8 h-8 rounded-full bg-[#0066b3] text-white flex items-center justify-center flex-shrink-0 text-[14px] font-bold">
                           1
                         </div>
-                        <p className="text-[16px] text-[#4c556c]" style={{ fontFamily: "caixaStdRegular, sans-serif" }}>
+                        <p
+                          className="text-[14px] md:text-[16px] text-[#4c556c]"
+                          style={{ fontFamily: "caixaStdRegular, sans-serif" }}
+                        >
                           Abra o aplicativo do seu banco ou carteira digital
                         </p>
                       </div>
@@ -316,7 +319,10 @@ export default function PixEmailPage() {
                         <div className="w-8 h-8 rounded-full bg-[#0066b3] text-white flex items-center justify-center flex-shrink-0 text-[14px] font-bold">
                           2
                         </div>
-                        <p className="text-[16px] text-[#4c556c]" style={{ fontFamily: "caixaStdRegular, sans-serif" }}>
+                        <p
+                          className="text-[14px] md:text-[16px] text-[#4c556c]"
+                          style={{ fontFamily: "caixaStdRegular, sans-serif" }}
+                        >
                           Escolha pagar com PIX usando QR Code ou código copia e cola
                         </p>
                       </div>
@@ -324,7 +330,10 @@ export default function PixEmailPage() {
                         <div className="w-8 h-8 rounded-full bg-[#0066b3] text-white flex items-center justify-center flex-shrink-0 text-[14px] font-bold">
                           3
                         </div>
-                        <p className="text-[16px] text-[#4c556c]" style={{ fontFamily: "caixaStdRegular, sans-serif" }}>
+                        <p
+                          className="text-[14px] md:text-[16px] text-[#4c556c]"
+                          style={{ fontFamily: "caixaStdRegular, sans-serif" }}
+                        >
                           Escaneie o QR Code acima ou cole o código copiado
                         </p>
                       </div>
@@ -332,7 +341,10 @@ export default function PixEmailPage() {
                         <div className="w-8 h-8 rounded-full bg-[#10b981] text-white flex items-center justify-center flex-shrink-0 text-[14px] font-bold">
                           4
                         </div>
-                        <p className="text-[16px] text-[#4c556c]" style={{ fontFamily: "caixaStdRegular, sans-serif" }}>
+                        <p
+                          className="text-[14px] md:text-[16px] text-[#4c556c]"
+                          style={{ fontFamily: "caixaStdRegular, sans-serif" }}
+                        >
                           Confirme o pagamento e pronto! Suas apostas serão processadas automaticamente
                         </p>
                       </div>
@@ -368,7 +380,7 @@ export default function PixEmailPage() {
                         </p>
                         {orderData.email && (
                           <p
-                            className="text-[14px] text-[#4c556c]"
+                            className="text-[14px] text-[#4c556c] break-all"
                             style={{ fontFamily: "caixaStdRegular, sans-serif" }}
                           >
                             {orderData.email}
@@ -387,15 +399,15 @@ export default function PixEmailPage() {
                       </p>
                       <div className="space-y-3">
                         {orderData?.items.map((item, index) => (
-                          <div key={index} className="flex justify-between items-center">
+                          <div key={index} className="flex justify-between items-center gap-2">
                             <span
-                              className="text-[14px] text-[#1f2a47]"
+                              className="text-[14px] text-[#1f2a47] flex-1"
                               style={{ fontFamily: "caixaStdRegular, sans-serif" }}
                             >
                               {item.quantity}x {item.title}
                             </span>
                             <span
-                              className="text-[14px] text-[#0066b3] font-bold"
+                              className="text-[14px] text-[#0066b3] font-bold flex-shrink-0"
                               style={{ fontFamily: "caixaStdBold, sans-serif" }}
                             >
                               R$ {(item.price * item.quantity).toFixed(2).replace(".", ",")}
@@ -424,13 +436,13 @@ export default function PixEmailPage() {
                     {/* Security badges */}
                     <div className="space-y-3">
                       <div className="flex items-center gap-3 text-[#10b981]">
-                        <ShieldCheck className="w-5 h-5" />
+                        <ShieldCheck className="w-5 h-5 flex-shrink-0" />
                         <span className="text-[14px]" style={{ fontFamily: "caixaStdRegular, sans-serif" }}>
                           Pagamento 100% seguro
                         </span>
                       </div>
                       <div className="flex items-center gap-3 text-[#0066b3]">
-                        <Smartphone className="w-5 h-5" />
+                        <Smartphone className="w-5 h-5 flex-shrink-0" />
                         <span className="text-[14px]" style={{ fontFamily: "caixaStdRegular, sans-serif" }}>
                           Confirmação instantânea
                         </span>
@@ -442,7 +454,7 @@ export default function PixEmailPage() {
                   {transactionId && (
                     <div className="bg-[#f8f9fa] border-t border-[#dee2e6] p-4">
                       <p
-                        className="text-[12px] text-[#4c556c] text-center"
+                        className="text-[12px] text-[#4c556c] text-center break-all"
                         style={{ fontFamily: "caixaStdRegular, sans-serif" }}
                       >
                         ID da transação: {transactionId}

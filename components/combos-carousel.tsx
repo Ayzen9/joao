@@ -33,43 +33,23 @@ export function CombosCarousel() {
   const handlePrev = useCallback(() => {
     if (isAnimating) return
     setIsAnimating(true)
-
-    setCurrentIndex((prev) => {
-      const newIndex = (prev - 1 + totalCombos) % totalCombos
-      return newIndex
-    })
-
-    setTimeout(() => {
-      setIsAnimating(false)
-    }, 500)
+    setCurrentIndex((prev) => (prev - 1 + totalCombos) % totalCombos)
+    setTimeout(() => setIsAnimating(false), 500)
   }, [isAnimating, totalCombos])
 
   const handleNext = useCallback(() => {
     if (isAnimating) return
     setIsAnimating(true)
-
-    setCurrentIndex((prev) => {
-      const newIndex = (prev + 1) % totalCombos
-      return newIndex
-    })
-
-    setTimeout(() => {
-      setIsAnimating(false)
-    }, 500)
+    setCurrentIndex((prev) => (prev + 1) % totalCombos)
+    setTimeout(() => setIsAnimating(false), 500)
   }, [isAnimating, totalCombos])
 
   const handleFlipCard = (comboId: string) => {
-    setFlippedCards((prev) => ({
-      ...prev,
-      [comboId]: !prev[comboId],
-    }))
+    setFlippedCards((prev) => ({ ...prev, [comboId]: !prev[comboId] }))
   }
 
   const handleShowNumbersToggle = (comboId: string) => {
-    setShowNumbersMap((prev) => ({
-      ...prev,
-      [comboId]: !prev[comboId],
-    }))
+    setShowNumbersMap((prev) => ({ ...prev, [comboId]: !prev[comboId] }))
   }
 
   const handleQuantityChange = (comboId: string, delta: number) => {
@@ -92,13 +72,9 @@ export function CombosCarousel() {
     const comboWithGames = generateComboGames(combo)
     addComboToCart(comboWithGames, showNumbers)
     handleFlipCard(combo.id)
-
-    if (payNow) {
-      window.location.href = "/carrinho"
-    }
+    if (payNow) window.location.href = "/carrinho"
   }
 
-  // Get visible combos (show 3 cards)
   const getVisibleCombos = () => {
     const combos = []
     for (let i = 0; i < 3; i++) {
@@ -109,75 +85,74 @@ export function CombosCarousel() {
   }
 
   return (
-    <section className="py-12 bg-[#f5f5f5]">
-      <div className="max-w-[1400px] mx-auto px-10">
-        <h2 className="text-[48px] mb-2" style={{ letterSpacing: "-1.5px", lineHeight: "58px" }}>
-          <span
-            style={{ fontFamily: "caixaStdBook, sans-serif", fontWeight: 300, color: "#adc0c4", fontStyle: "italic" }}
+    <section className="py-8 md:py-12 bg-[#f5f5f5]">
+      <div className="max-w-[1400px] mx-auto px-4 md:px-10">
+        <div className="text-center md:text-left">
+          <h2
+            className="text-[28px] sm:text-[36px] md:text-[48px] lg:text-[55px] leading-tight tracking-[-1.5px]"
           >
-            Combos de{" "}
-          </span>
-          <span
-            style={{
-              fontFamily: "caixaStdBold, sans-serif",
-              fontWeight: 800,
-              color: "#e67200",
-              textDecoration: "underline",
-              textDecorationThickness: "3px",
-              textUnderlineOffset: "4px",
-            }}
-          >
-            apostas
-          </span>
-        </h2>
-        <p className="text-[16px] text-[#4c556c] mb-8" style={{ fontFamily: "caixaStdRegular, sans-serif" }}>
-          Cada combo possui uma variedade de jogos prontos para você testar a sua sorte. Quanto mais você joga, mais
-          chances de ganhar!
-        </p>
+            <span
+              className="font-caixaStdBook font-light"
+              style={{ color: "#adc0c4" }}
+            >
+              Combos de{" "}
+            </span>
+            <span
+              className="font-caixaStdBold font-black"
+              style={{
+                color: "#0066b3",
+              }}
+            >
+              apostas
+            </span>
+          </h2>
 
-        <div className="relative">
-          {/* Left Arrow */}
+          <p
+            className="text-[14px] md:text-[15px] text-[#03528e] mt-1 leading-[1.35] tracking-[0.3px] max-w-[1000px]"
+            style={{ fontFamily: "caixaStdRegular, sans-serif" }}
+          >
+            Cada combo possui uma variedade de jogos prontos para você testar a sua sorte. Quanto mais você joga, mais chances de ganhar!
+          </p>
+        </div>
+
+        <div className="relative mt-8 md:mt-10">
           <button
             onClick={handlePrev}
             disabled={isAnimating}
-            className="absolute left-[-50px] top-1/2 -translate-y-1/2 z-10 w-[40px] h-[40px] flex items-center justify-center transition-all duration-300 hover:scale-110 disabled:opacity-50 cursor-pointer"
+            className="absolute left-0 md:left-[-50px] top-1/2 -translate-y-1/2 z-10 w-[36px] md:w-[40px] h-[36px] md:h-[40px] flex items-center justify-center transition-all duration-300 hover:scale-110 disabled:opacity-50 cursor-pointer bg-white/80 md:bg-transparent rounded-full md:rounded-none shadow-md md:shadow-none"
             aria-label="Anterior"
           >
             <img
               src="https://www.loteriasonline.caixa.gov.br/silce-web/images/icons/icon-slider.png"
               alt="Anterior"
-              className="w-[20px] h-[32px] opacity-60 hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+              className="w-[16px] md:w-[20px] h-[26px] md:h-[32px] opacity-60 hover:opacity-100 transition-opacity duration-300 pointer-events-none"
             />
           </button>
 
-          {/* Carousel Container */}
-          <div className="overflow-hidden" ref={carouselRef}>
+          <div className="overflow-hidden mx-8 md:mx-0" ref={carouselRef}>
             <div
-              className="flex gap-6 transition-all duration-500 ease-out"
-              style={{
-                transform: `translateX(0)`,
-              }}
+              className="flex gap-4 md:gap-6 transition-all duration-500 ease-out"
+              style={{ transform: `translateX(0)` }}
             >
               {getVisibleCombos().map((combo, idx) => (
                 <div
                   key={`${combo.id}-${currentIndex}-${idx}`}
-                  className="flex-shrink-0"
+                  className={`flex-shrink-0 ${idx === 0 ? "block" : "hidden md:block"}`}
                   style={{
-                    width: `calc(33.333% - 16px)`,
-                    minWidth: "320px",
+                    width: `calc(100% - 16px)`,
+                    minWidth: "280px",
                     maxWidth: "370px",
                     perspective: "1000px",
                     animation: isAnimating ? `fadeSlide 0.5s ease-out` : "none",
                   }}
                 >
                   <div
-                    className="relative w-full h-[480px] transition-transform duration-600 ease-in-out"
+                    className="relative w-full h-[420px] md:h-[480px] transition-transform duration-600 ease-in-out"
                     style={{
                       transformStyle: "preserve-3d",
                       transform: flippedCards[combo.id] ? "rotateY(180deg)" : "rotateY(0deg)",
                     }}
                   >
-                    {/* FRONT of card */}
                     <div
                       className="absolute inset-0 w-full h-full rounded-xl overflow-hidden shadow-lg bg-white"
                       style={{ backfaceVisibility: "hidden" }}
@@ -185,7 +160,6 @@ export function CombosCarousel() {
                       <ComboCardFront combo={combo} onAposteJa={() => handleFlipCard(combo.id)} />
                     </div>
 
-                    {/* BACK of card */}
                     <div
                       className="absolute inset-0 w-full h-full rounded-xl overflow-hidden shadow-lg"
                       style={{
@@ -211,17 +185,16 @@ export function CombosCarousel() {
             </div>
           </div>
 
-          {/* Right Arrow */}
           <button
             onClick={handleNext}
             disabled={isAnimating}
-            className="absolute right-[-50px] top-1/2 -translate-y-1/2 z-10 w-[40px] h-[40px] flex items-center justify-center transition-all duration-300 hover:scale-110 disabled:opacity-50 cursor-pointer"
+            className="absolute right-0 md:right-[-50px] top-1/2 -translate-y-1/2 z-10 w-[36px] md:w-[40px] h-[36px] md:h-[40px] flex items-center justify-center transition-all duration-300 hover:scale-110 disabled:opacity-50 cursor-pointer bg-white/80 md:bg-transparent rounded-full md:rounded-none shadow-md md:shadow-none"
             aria-label="Próximo"
           >
             <img
               src="https://www.loteriasonline.caixa.gov.br/silce-web/images/icons/icon-slider.png"
               alt="Próximo"
-              className="w-[20px] h-[32px] rotate-180 opacity-60 hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+              className="w-[16px] md:w-[20px] h-[26px] md:h-[32px] rotate-180 opacity-60 hover:opacity-100 transition-opacity duration-300 pointer-events-none"
             />
           </button>
         </div>
@@ -238,12 +211,11 @@ function ComboCardFront({
     if (combo.layoutType === "single") {
       const game = combo.games[0]
       return (
-        <div className="w-full h-[230px] relative overflow-hidden">
+        <div className="w-full h-[180px] md:h-[230px] relative overflow-hidden">
           <div
             className="absolute inset-0 flex flex-col items-center justify-center"
             style={{ backgroundColor: game.color }}
           >
-            {/* Clover pattern overlay */}
             <div
               className="absolute inset-0 opacity-[0.18]"
               style={{
@@ -253,11 +225,14 @@ function ComboCardFront({
                 backgroundRepeat: "no-repeat",
               }}
             />
-            <span className="relative z-10 text-white text-[25px]" style={{ fontFamily: "futuraBold, sans-serif" }}>
+            <span
+              className="relative z-10 text-white text-[20px] md:text-[25px]"
+              style={{ fontFamily: "futuraBold, sans-serif" }}
+            >
               {game.lottery}
             </span>
             <span
-              className="relative z-10 text-white/80 text-[18px] mt-2"
+              className="relative z-10 text-white/80 text-[14px] md:text-[18px] mt-2"
               style={{ fontFamily: "caixaStdRegular, sans-serif", letterSpacing: "0.5px" }}
             >
               Concurso {game.concurso}
@@ -270,10 +245,10 @@ function ComboCardFront({
     const games = combo.games
     const isOddCount = games.length % 2 !== 0
     const rows = Math.ceil(games.length / 2)
-    const cellHeight = 230 / rows
+    const cellHeight = 180 / rows
 
     return (
-      <div className="w-full h-[230px] grid grid-cols-2 gap-0">
+      <div className="w-full h-[180px] md:h-[230px] grid grid-cols-2 gap-0">
         {games.map((game, idx) => {
           const isLastAndOdd = isOddCount && idx === games.length - 1
           return (
@@ -285,7 +260,6 @@ function ComboCardFront({
                 minHeight: `${cellHeight}px`,
               }}
             >
-              {/* Clover pattern overlay */}
               <div
                 className="absolute inset-0 opacity-[0.18]"
                 style={{
@@ -296,13 +270,13 @@ function ComboCardFront({
                 }}
               />
               <span
-                className="relative z-10 text-white text-[14px] leading-tight"
+                className="relative z-10 text-white text-[12px] md:text-[14px] leading-tight"
                 style={{ fontFamily: "futuraBold, sans-serif" }}
               >
                 {game.lottery}
               </span>
               <span
-                className="relative z-10 text-white/70 text-[10px] mt-0.5"
+                className="relative z-10 text-white/70 text-[9px] md:text-[10px] mt-0.5"
                 style={{ fontFamily: "caixaStdRegular, sans-serif" }}
               >
                 Concurso {game.concurso}
@@ -316,29 +290,30 @@ function ComboCardFront({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Colorful header with games */}
       {renderGameGrid()}
 
-      {/* White content area */}
-      <div className="flex-1 p-5 flex flex-col items-center text-center bg-white">
-        <h3 className="text-[22px] text-[#1f2a47] mb-2" style={{ fontFamily: "caixaStdBold, sans-serif" }}>
+      <div className="flex-1 p-4 md:p-5 flex flex-col items-center text-center bg-white">
+        <h3
+          className="text-[18px] md:text-[22px] text-[#1f2a47] mb-2"
+          style={{ fontFamily: "caixaStdBold, sans-serif" }}
+        >
           {combo.name}
         </h3>
         <p
-          className="text-[12px] text-[#4e556a] mb-4 leading-[1.35] min-h-[40px]"
+          className="text-[11px] md:text-[12px] text-[#4e556a] mb-3 md:mb-4 leading-[1.35] min-h-[32px] md:min-h-[40px]"
           style={{ fontFamily: "caixaStdRegular, sans-serif" }}
         >
           {combo.description}
         </p>
         <span
-          className="text-[25px] text-[#4e556a] mb-4"
+          className="text-[20px] md:text-[25px] text-[#4e556a] mb-3 md:mb-4"
           style={{ fontFamily: "caixaStdBold, sans-serif", fontWeight: 700 }}
         >
           R$ {combo.price.toFixed(2).replace(".", ",")}
         </span>
         <button
           onClick={onAposteJa}
-          className="w-[160px] py-3 rounded-lg text-[16px] text-white transition-all hover:brightness-110 hover:scale-105 cursor-pointer"
+          className="w-[140px] md:w-[160px] py-2.5 md:py-3 rounded-lg text-[14px] md:text-[16px] text-white transition-all hover:brightness-110 hover:scale-105 cursor-pointer"
           style={{
             fontFamily: "caixaStdBold, sans-serif",
             backgroundColor: "#e67200",
@@ -374,93 +349,96 @@ function ComboCardBack({
 }) {
   return (
     <div className="flex flex-col h-full bg-[#3eb3ae]">
-      {/* Header with games and close button */}
-      <div className="relative p-4 flex-1">
-        {/* Close button - orange X */}
+      <div className="relative p-3 md:p-4 flex-1">
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 w-[33px] h-[33px] rounded-full bg-[#e9983f] flex items-center justify-center text-white hover:bg-[#d88a35] transition-colors z-10 cursor-pointer"
+          className="absolute top-2 md:top-3 right-2 md:right-3 w-[28px] md:w-[33px] h-[28px] md:h-[33px] rounded-full bg-[#e9983f] flex items-center justify-center text-white hover:bg-[#d88a35] transition-colors z-10 cursor-pointer"
           aria-label="Fechar"
         >
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
             <path d="M1 1L13 13M1 13L13 1" stroke="white" strokeWidth="2" strokeLinecap="round" />
           </svg>
         </button>
 
-        {/* Games list in back - scrollable if many games */}
-        <div className="flex flex-wrap justify-center gap-2 mt-6 mb-3 max-h-[100px] overflow-y-auto">
+        <div className="flex flex-wrap justify-center gap-2 mt-5 md:mt-6 mb-2 md:mb-3 max-h-[80px] md:max-h-[100px] overflow-y-auto">
           {combo.games.map((game, idx) => (
             <div key={idx} className="text-center text-white px-2">
-              <span className="text-[13px] block" style={{ fontFamily: "futuraBold, sans-serif" }}>
+              <span className="text-[11px] md:text-[13px] block" style={{ fontFamily: "futuraBold, sans-serif" }}>
                 {game.lottery}
               </span>
-              <span className="text-[9px] block opacity-80" style={{ fontFamily: "caixaStdRegular, sans-serif" }}>
+              <span
+                className="text-[8px] md:text-[9px] block opacity-80"
+                style={{ fontFamily: "caixaStdRegular, sans-serif" }}
+              >
                 Concurso {game.concurso}
               </span>
             </div>
           ))}
         </div>
 
-        {/* Info text */}
         <p
-          className="text-white/90 text-[11px] text-center mt-2 px-2"
+          className="text-white/90 text-[10px] md:text-[11px] text-center mt-2 px-2"
           style={{ fontFamily: "caixaStdRegular, sans-serif" }}
         >
           Os números dos jogos dos combos são escolhidos aleatoriamente pelo sistema. Mas antes de efetuar o pagamento é
           possível visualizar os números selecionados.
         </p>
 
-        {/* Checkbox */}
-        <label className="flex items-center justify-center gap-2 mt-3 cursor-pointer">
+        <label className="flex items-center justify-center gap-2 mt-2 md:mt-3 cursor-pointer">
           <input
             type="checkbox"
             checked={showNumbers}
             onChange={onToggleNumbers}
             className="w-4 h-4 accent-[#005aa5]"
           />
-          <span className="text-white text-[12px]" style={{ fontFamily: "caixaStdRegular, sans-serif" }}>
+          <span className="text-white text-[10px] md:text-[12px]" style={{ fontFamily: "caixaStdRegular, sans-serif" }}>
             Quero ver os números escolhidos antes de pagar
           </span>
         </label>
       </div>
 
-      {/* Bottom section - white */}
-      <div className="bg-white p-4 flex flex-col items-center justify-center">
-        <span className="text-[14px] text-[#4c556c] mb-3" style={{ fontFamily: "caixaStdRegular, sans-serif" }}>
+      <div className="bg-white p-3 md:p-4 flex flex-col items-center justify-center">
+        <span
+          className="text-[12px] md:text-[14px] text-[#4c556c] mb-2 md:mb-3"
+          style={{ fontFamily: "caixaStdRegular, sans-serif" }}
+        >
           Quantidade de apostas:
         </span>
 
-        {/* Quantity selector */}
-        <div className="flex items-center gap-0 mb-4">
+        <div className="flex items-center gap-0 mb-3 md:mb-4">
           <button
             onClick={() => onQuantityChange(-1)}
-            className="w-[40px] h-[40px] bg-[#005aa5] text-white text-[24px] flex items-center justify-center rounded-l-lg hover:bg-[#004a8a] transition-colors cursor-pointer"
+            className="w-[36px] md:w-[40px] h-[36px] md:h-[40px] bg-[#005aa5] text-white text-[20px] md:text-[24px] flex items-center justify-center rounded-l-lg hover:bg-[#004a8a] transition-colors cursor-pointer"
           >
             -
           </button>
-          <div className="w-[50px] h-[40px] bg-white border-t-2 border-b-2 border-[#005aa5] flex items-center justify-center">
-            <span className="text-[18px] text-[#1f2a47]" style={{ fontFamily: "caixaStdBold, sans-serif" }}>
+          <div className="w-[45px] md:w-[50px] h-[36px] md:h-[40px] bg-white border-t-2 border-b-2 border-[#005aa5] flex items-center justify-center">
+            <span
+              className="text-[16px] md:text-[18px] text-[#1f2a47]"
+              style={{ fontFamily: "caixaStdBold, sans-serif" }}
+            >
               {quantity}
             </span>
           </div>
           <button
             onClick={() => onQuantityChange(1)}
-            className="w-[40px] h-[40px] bg-[#005aa5] text-white text-[24px] flex items-center justify-center rounded-r-lg hover:bg-[#004a8a] transition-colors cursor-pointer"
+            className="w-[36px] md:w-[40px] h-[36px] md:h-[40px] bg-[#005aa5] text-white text-[20px] md:text-[24px] flex items-center justify-center rounded-r-lg hover:bg-[#004a8a] transition-colors cursor-pointer"
           >
             +
           </button>
         </div>
 
-        {/* Total */}
-        <span className="text-[24px] text-[#1f2a47] mb-4" style={{ fontFamily: "caixaStdBold, sans-serif" }}>
+        <span
+          className="text-[20px] md:text-[24px] text-[#1f2a47] mb-3 md:mb-4"
+          style={{ fontFamily: "caixaStdBold, sans-serif" }}
+        >
           Total: R$ {total.toFixed(2).replace(".", ",")}
         </span>
 
-        {/* Action buttons */}
-        <div className="flex gap-3 w-full">
+        <div className="flex gap-2 md:gap-3 w-full">
           <button
             onClick={onPayNow}
-            className="flex-1 py-3 rounded-lg text-[14px] text-white transition-all hover:brightness-110 cursor-pointer"
+            className="flex-1 py-2.5 md:py-3 rounded-lg text-[12px] md:text-[14px] text-white transition-all hover:brightness-110 cursor-pointer"
             style={{
               fontFamily: "caixaStdBold, sans-serif",
               backgroundColor: "#e67200",
@@ -470,7 +448,7 @@ function ComboCardBack({
           </button>
           <button
             onClick={onAddToCart}
-            className="flex-1 py-3 rounded-lg text-[14px] border-2 border-[#005aa5] text-[#005aa5] bg-white hover:bg-[#005aa5] hover:text-white transition-all cursor-pointer"
+            className="flex-1 py-2.5 md:py-3 rounded-lg text-[12px] md:text-[14px] border-2 border-[#005aa5] text-[#005aa5] bg-white hover:bg-[#005aa5] hover:text-white transition-all cursor-pointer"
             style={{ fontFamily: "caixaStdBold, sans-serif" }}
           >
             Incluir no carrinho
